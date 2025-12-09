@@ -10,8 +10,10 @@ import { useMemo } from "react";
 
 export default function InstructorsPage() {
     const firestore = useFirestore();
+    // The query is now memoized and does not depend on the user, so it's stable.
     const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
-    const { data: instructors, loading } = useCollection<Instructor>(instructorsCollection);
+    // The hook will fetch data once the firestore instance is available.
+    const { data: instructors, isLoading } = useCollection<Instructor>(instructorsCollection);
 
   return (
     <div className="container py-12 md:py-16">
@@ -20,7 +22,7 @@ export default function InstructorsPage() {
         description="Learn from the best. Our instructors are passionate, experienced, and dedicated to your success and well-being."
       />
       <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {loading && Array.from({ length: 4 }).map((_, i) => (
+        {isLoading && Array.from({ length: 4 }).map((_, i) => (
              <div key={i} className="space-y-2">
                 <Skeleton className="w-full aspect-square" />
                 <Skeleton className="h-6 w-3/4" />

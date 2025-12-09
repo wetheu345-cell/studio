@@ -1,14 +1,15 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, User, LogOut, Heart, LayoutDashboard } from 'lucide-react';
-import { signOut, Auth } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
+import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Logo } from '@/components/icons';
 import { useUser, useAuth } from '@/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -42,13 +43,15 @@ export function Header() {
   const photoURL = user?.photoURL || firebaseUser?.photoURL;
   const email = firebaseUser?.email;
 
+  const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/culture-rally.firebasestorage.app/o/logo.png?alt=media&token=REPLACE_WITH_YOUR_TOKEN';
+
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Logo className="h-6 w-auto" />
+            <Image src={logoUrl} alt="EHW Logo" width={100} height={40} priority />
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {navLinks.map((link) => (
@@ -77,7 +80,7 @@ export function Header() {
               <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
             </SheetHeader>
             <Link href="/" className="flex items-center">
-              <Logo className="h-6 w-auto" />
+                <Image src={logoUrl} alt="EHW Logo" width={100} height={40} priority />
             </Link>
             <div className="my-4 h-px w-full bg-border" />
             <div className="flex flex-col space-y-4">

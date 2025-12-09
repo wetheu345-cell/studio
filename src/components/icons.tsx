@@ -1,7 +1,6 @@
 
-      
 import type { SVGProps } from 'react';
-
+// This component is no longer used for the main logo but is kept for potential future use.
 export function Logo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -12,40 +11,9 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g className="logo-gallop-group" style={{ transformOrigin: '50% 70%' }}>
-        <path 
-          d="M45.6,10.5C42.5,10.2,38.3,11,36.4,14.4C35.9,15.5,35.8,17.9,37.6,18.9C39.4,19.9,42.5,19.1,43,17.9C43.5,16.7,42.9,15.2,41.7,14.7C42.8,13,44.9,11.3,47,11.3C48.1,11.3,49.2,12,49.2,12L47.9,8.5L45.6,10.5Z"
-          fill="currentColor"
-        />
-        <path 
-          d="M59.1,20.4C58.9,19.2,57.7,18,56.3,18C54.4,18,52.8,19.6,52.8,21.5C52.8,23.4,54.4,25,56.3,25C57.5,25,58.6,24.3,59.1,23.3L61.6,24.1C60.7,26,58.7,27.5,56.3,27.5C53,27.5,50.3,24.8,50.3,21.5C50.3,18.2,53,15.5,56.3,15.5C58.7,15.5,60.7,17,61.6,18.9L59.1,20.4Z"
-          fill="currentColor"
-        />
-        <path 
-          d="M62.8,21.5C62.8,18.5,65.2,16,68.1,16H74.3V13.5H68.1C63.8,13.5,60.3,17.1,60.3,21.5C60.3,25.9,63.8,29.5,68.1,29.5H74.3V27H68.1C65.2,27,62.8,24.5,62.8,21.5Z"
-          fill="currentColor"
-        />
-        <path 
-          d="M75,13.5H78.8V29.5H75V13.5Z" 
-          fill="currentColor"
-        />
-        <path 
-          d="M38,20.5C35.2,22.2,32,24.5,32,28.5C32,32.4,35.5,34.5,38,32.5L34.5,29.5L38,20.5Z"
-          fill="currentColor"
-        />
-        <path 
-          d="M26.9,14.6C26.9,14.6,21.6,16.3,18,23.2C15.4,28.3,15.6,30.5,18.4,32.6C20.5,34.2,23.1,34.1,26.6,31.3C28.9,29.4,32.8,24.9,32.8,24.9"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path 
-          d="M40.2,28.6C28.2,27.4,19.4,20,19.4,20C17.5,27.3,20.4,32.2,28.4,36.5C34.4,39.6,41.9,35.4,46.1,34.1C49.9,32.9,40.5,30.9,40.2,28.6Z"
-          fill="currentColor"
-        />
-      </g>
+        <text x="10" y="30" fontFamily="Belleza, sans-serif" fontSize="30" fill="currentColor">
+            EHW
+        </text>
     </svg>
   );
 }
-
-    
