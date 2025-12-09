@@ -24,12 +24,17 @@ export default function AdminSchedulePage() {
   const loading = lessonsLoading || instructorsLoading || horsesLoading;
 
   const scheduledDays = useMemo(() => {
-    return lessons?.map(lesson => new Date(lesson.date.split('T')[0])) || [];
+    // The date from firestore is a string 'yyyy-MM-dd'. We need to parse it correctly.
+    // The toISOString().split('T')[0] in the filter below works on strings.
+    // For the calendar, we should provide Date objects. The date string needs to be handled carefully for timezones.
+    // By splitting on 'T' or using 'yyyy-MM-dd', we are treating it as a local date.
+    return lessons?.map(lesson => new Date(lesson.date.replace(/-/g, '/'))) || [];
   }, [lessons]);
 
   const lessonsOnSelectedDay = useMemo(() => {
     if (!lessons || !selectedDate) return [];
     
+    // Format selectedDate to 'yyyy-MM-dd' to match the format in Firestore.
     const selectedDayString = selectedDate.toISOString().split('T')[0];
 
     return lessons
@@ -56,7 +61,7 @@ export default function AdminSchedulePage() {
       <div className="mt-8 grid gap-8 md:grid-cols-3">
         <div className="md:col-span-1">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 flex justify-center">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -64,9 +69,8 @@ export default function AdminSchedulePage() {
                 modifiers={{ scheduled: scheduledDays }}
                 modifiersStyles={{ scheduled: {
                     border: "2px solid hsl(var(--accent))",
-                    borderRadius: '50%',
                  } }}
-                className="w-full"
+                className="rounded-md border"
               />
             </CardContent>
           </Card>
@@ -86,7 +90,7 @@ export default function AdminSchedulePage() {
                             key={lesson.id} 
                             lesson={lesson}
                             instructor={instructorsMap.get(lesson.instructorId)}
-                            horse={horsesMap.get(lesson.horseId)}
+                            horse={lesson.horseId ? horsesMap.get(lesson.horseId) : undefined}
                         />
                     ))}
                 </div>

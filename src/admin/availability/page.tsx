@@ -101,6 +101,9 @@ export default function AvailabilityPage() {
             availabilityDocRef = doc(firestore, 'availability', existingDocId);
             await updateDoc(availabilityDocRef, { timeSlots: newTimeSlots });
         } else {
+            // Firestore does not have a native way to get the ID before creation client-side easily.
+            // A common pattern is to create the doc and then maybe read it back if ID is needed immediately,
+            // or structure your data so you don't need it. Here we don't.
             const collectionRef = collection(firestore, 'availability');
             await addDoc(collectionRef, availabilityData);
         }
@@ -136,7 +139,6 @@ export default function AvailabilityPage() {
       <PageHeader
         title="My Availability"
         description="Set your available hours for the upcoming week so clients can book lessons with you."
-        className="text-left px-0"
       />
 
       <div className="mt-8 grid md:grid-cols-2 gap-8 items-start">
@@ -157,7 +159,7 @@ export default function AvailabilityPage() {
         
         <Card>
              <CardHeader>
-                <CardTitle>Manage Time Slots for {format(selectedDate, 'MMMM do')}</CardTitle>
+                <CardTitle>Manage Time Slots for {selectedDate ? format(selectedDate, 'MMMM do') : '...'}</CardTitle>
                 <CardDescription>Add or remove your working hours for the selected day.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

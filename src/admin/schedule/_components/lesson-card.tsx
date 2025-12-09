@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SelectHorseDialog } from '../../my-schedule/_components/select-horse-dialog';
 
 interface LessonCardProps {
-    lesson: Lesson;
+    lesson: Lesson & { id: string };
     instructor?: Instructor;
     horse?: Horse;
 }

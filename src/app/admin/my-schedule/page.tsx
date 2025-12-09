@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useState } from 'react';
 import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -30,24 +31,33 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 export default function MySchedulePage() {
-  const { firebaseUser } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [selectedLesson, setSelectedLesson] = useState<(Lesson & { id: string }) | null>(null);
   const [lessonToCancel, setLessonToCancel] = useState<(Lesson & { id: string}) | null>(null);
 
-  const instructorsQuery = useMemo(() => 
-    (firestore && firebaseUser ? query(collection(firestore, 'instructors'), where('userId', '==', firebaseUser.uid)) : null),
-    [firestore, firebaseUser]
+  // This assumes the instructor's ID in the 'instructors' collection is the same as their user UID.
+  // This needs to be robust. If an instructor document has a 'userId' field, that is better.
+  const lessonsQuery = useMemo(() => 
+    (firestore && user?.role === 'Instructor' ? query(collection(firestore, 'lessons'), where('instructorId', '==', user.uid)) : null),
+    [firestore, user]
+  );
+  
+  // A better approach if instructor documents have a userId
+   const instructorsQuery = useMemo(() => 
+    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
+    [firestore, user]
   );
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
 
-  const lessonsQuery = useMemo(() => 
-    (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id)) : null),
+  const lessonsQueryFinal = useMemo(() => 
+    (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id), where('status', '!=', 'Cancelled')) : null),
     [firestore, instructor]
   );
-  const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsQuery);
+
+  const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsQueryFinal);
   
   const loading = instructorsLoading || lessonsLoading;
 
