@@ -60,8 +60,8 @@ export default function HorseProfilePage() {
           <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-wide">{horse.name}</h1>
           <p className="text-muted-foreground text-lg mt-2">{horse.breed}</p>
           
-          <div className="mt-6 space-y-4 font-body text-lg">
-            <p>{horse.description}</p>
+          <div className="mt-6 space-y-4 text-lg">
+            <p className="leading-relaxed">{horse.description}</p>
             <div className="flex flex-wrap gap-4 items-center">
                 <div className="font-semibold">Age: {horse.age} years</div>
                 <div className="flex items-center gap-2">

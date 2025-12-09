@@ -66,7 +66,7 @@ export default function AdminHorsesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Breed</TableHead>
+                <TableHead className="hidden sm:table-cell">Breed</TableHead>
                 <TableHead>Age</TableHead>
                 <TableHead>Suitability</TableHead>
                 <TableHead>
@@ -78,7 +78,7 @@ export default function AdminHorsesPage() {
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="font-medium">Loading...</TableCell>
-                  <TableCell>Loading...</TableCell>
+                  <TableCell className="hidden sm:table-cell">Loading...</TableCell>
                   <TableCell>...</TableCell>
                   <TableCell>...</TableCell>
                   <TableCell>...</TableCell>
@@ -87,7 +87,7 @@ export default function AdminHorsesPage() {
               {horses?.map((horse) => (
                 <TableRow key={horse.id}>
                   <TableCell className="font-medium">{horse.name}</TableCell>
-                  <TableCell>{horse.breed}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{horse.breed}</TableCell>
                   <TableCell>{horse.age}</TableCell>
                   <TableCell>
                     <Badge variant={horse.suitability === "Therapy" ? "destructive" : "secondary"}>

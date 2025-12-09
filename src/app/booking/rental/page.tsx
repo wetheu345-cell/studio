@@ -1,3 +1,4 @@
+
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -83,7 +84,7 @@ export default function MuseumRentalPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="date">Event Date</Label>
                 <Popover>

@@ -66,7 +66,7 @@ export default function AdminInstructorsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Specialty</TableHead>
+                <TableHead className="hidden sm:table-cell">Specialty</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -83,7 +83,7 @@ export default function AdminInstructorsPage() {
                       Loading...
                     </div>
                   </TableCell>
-                  <TableCell>Loading...</TableCell>
+                  <TableCell className="hidden sm:table-cell">Loading...</TableCell>
                   <TableCell>...</TableCell>
                 </TableRow>
               ))}
@@ -98,7 +98,7 @@ export default function AdminInstructorsPage() {
                       {instructor.name}
                     </div>
                   </TableCell>
-                  <TableCell>{instructor.specialty}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{instructor.specialty}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
