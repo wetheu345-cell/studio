@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/page-header'
-import { ArrowRight, FileText, DollarSign, Users, Calendar } from 'lucide-react'
+import { ArrowRight, FileText, DollarSign, Users, Calendar, Building } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
@@ -18,9 +18,9 @@ export default function BookingPage({
     <div className="flex flex-col items-center">
       <PageHeader
         title="Choose Your Experience"
-        description="Select the type of lesson you're interested in. Both options offer a unique connection with our amazing horses."
+        description="Select the type of service you're interested in. All our options offer a unique connection with our amazing horses and history."
       />
-      <div className="mt-12 w-full max-w-4xl space-y-8">
+      <div className="mt-12 w-full max-w-6xl space-y-8">
         <Alert>
           <FileText className="h-4 w-4" />
           <AlertTitle>New Riders!</AlertTitle>
@@ -33,7 +33,7 @@ export default function BookingPage({
             </Button>
           </AlertDescription>
         </Alert>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           <Link href="/booking/details?type=Regular" className="flex">
             <Card className={`w-full hover:border-accent cursor-pointer transition-all duration-300 flex flex-col ${type === 'Regular' ? 'border-accent border-2' : ''}`}>
               <CardHeader>
@@ -65,6 +65,26 @@ export default function BookingPage({
                  <div className="text-center mt-auto">
                     <Button variant="link" className="w-full">
                         Book a Therapy Session
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/booking/rental" className="flex">
+            <Card className={`w-full hover:border-accent cursor-pointer transition-all duration-300 flex flex-col ${type === 'MuseumRental' ? 'border-accent border-2' : ''}`}>
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl tracking-wide">Museum Rental</CardTitle>
+                <CardDescription>Host your event at our unique and historic on-site museum. Perfect for parties, meetings, and gatherings.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow flex flex-col justify-between">
+                 <ul className="text-sm text-muted-foreground space-y-2 mb-6">
+                    <li className="flex items-center gap-2"><Building className="h-4 w-4 text-accent" /> Capacity for up to 50 guests</li>
+                    <li className="flex items-center gap-2"><Calendar className="h-4 w-4 text-accent" /> Available for weekend and evening bookings</li>
+                </ul>
+                 <div className="text-center mt-auto">
+                    <Button variant="link" className="w-full">
+                        Book The Museum
                         <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                 </div>

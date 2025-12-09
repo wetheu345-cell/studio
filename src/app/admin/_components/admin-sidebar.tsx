@@ -63,7 +63,7 @@ export function AdminSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton href="/" tooltip={{ children: "Log Out" }}>
+             <SidebarMenuButton tooltip={{ children: "Log Out" }}>
                 <LogOut />
                 <span>Log Out</span>
             </SidebarMenuButton>
