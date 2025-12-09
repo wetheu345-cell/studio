@@ -35,7 +35,6 @@ export function Header() {
 
   const isAdminPage = pathname.startsWith('/admin');
   if (isAdminPage) {
-    // The admin layout uses its own dedicated header.
     return null;
   }
 
