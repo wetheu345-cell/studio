@@ -13,39 +13,44 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, isUserLoading } = useUser();
+  const { user, firebaseUser, isUserLoading } = useUser();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     if (isUserLoading) {
-      // Still waiting for user data to load.
       return;
     }
 
-    if (!user) {
-      // If loading is finished and there's no user, redirect to login.
+    if (!firebaseUser) {
       router.push('/login?redirect=/admin');
       return;
     }
     
-    // Check if the user's role allows access to the admin dashboard
-    const hasAdminAccess = user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin';
-    if (hasAdminAccess) {
-        setIsAuthorized(true);
-    } else {
-        // If the user is not authorized, redirect them to their account page.
+    // Once we have the app user object, we can check their role.
+    if (user) {
+        const hasAdminAccess = user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin';
+        if (hasAdminAccess) {
+            setIsAuthorized(true);
+        } else {
+            // User is logged in but not an admin type, send them to their profile.
+            router.push('/account');
+        }
+    } else if (!isUserLoading && firebaseUser && !user) {
+        // This can happen briefly while the user document is loading, or if it doesn't exist.
+        // If they definitely don't have a user doc, they are not an admin.
         router.push('/account');
     }
-  }, [user, isUserLoading, router]);
+
+  }, [user, firebaseUser, isUserLoading, router]);
 
   // While checking for authorization, show a loading state.
   if (isUserLoading || !isAuthorized) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
-            <div className="animate-pulse">
+            <div className="animate-pulse flex flex-col items-center gap-4">
                 <Logo className="h-12 w-auto text-muted-foreground" />
-                <p className="text-muted-foreground mt-2">Checking permissions...</p>
+                <p className="text-muted-foreground">Checking permissions...</p>
             </div>
         </div>
     );

@@ -73,15 +73,17 @@ export default function SignupPage() {
         createdAt: serverTimestamp(),
       };
       
-      await setDoc(userDocRef, userData).catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
+      setDoc(userDocRef, userData)
+        .catch(error => {
+            // This will be caught by the global error handler
+            throw new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'create',
                 requestResourceData: userData
-            }));
+            });
         });
 
-      if (role === 'Instructor' || role === 'Manager') {
+      if (role === 'Instructor' || role === 'Manager' || role === 'Admin') {
         router.push('/admin');
       } else {
         router.push('/account');
@@ -99,9 +101,9 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      const { isNewUser } = getAdditionalUserInfo(result) || { isNewUser: false };
+      const additionalUserInfo = getAdditionalUserInfo(result);
       
-      if (isNewUser) {
+      if (additionalUserInfo?.isNewUser) {
         const newUser = result.user;
         const userDocRef = doc(firestore, 'users', newUser.uid);
         const userData = {
@@ -113,7 +115,7 @@ export default function SignupPage() {
             createdAt: serverTimestamp(),
         };
 
-        await setDoc(userDocRef, userData, { merge: true });
+        await setDoc(userDocRef, userData);
       }
       router.push('/account');
     } catch (err: any) {

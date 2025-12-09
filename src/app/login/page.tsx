@@ -19,27 +19,37 @@ function LoginPageContent() {
   const firestore = useFirestore();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isUserLoading } = useUser();
+  const { user, firebaseUser, isUserLoading } = useUser();
 
   const redirectUrl = searchParams.get('redirect');
 
   useEffect(() => {
-    if (isUserLoading || !user) {
+    if (isUserLoading || !firebaseUser) {
       return;
     }
 
-    if (redirectUrl) {
-      router.push(redirectUrl);
-      return;
+    // The user is logged in via Firebase, but we might still be loading their custom user data (including role)
+    // We wait for the `user` object to be populated.
+    if (user) {
+        if (redirectUrl) {
+          router.push(redirectUrl);
+          return;
+        }
+
+        const isAdmin = user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin';
+        if (isAdmin) {
+          router.push('/admin');
+        } else {
+          router.push('/account');
+        }
     }
-    
-    if (user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin') {
-      router.push('/admin');
-    } else {
-      router.push('/account');
+    // If firebaseUser exists but user is null (and not loading), it might be a new user or data fetch issue.
+    // The default behavior will be to redirect to /account if no role is found. A simple check is enough here.
+    else if (!isUserLoading && firebaseUser && !user) {
+         router.push('/account');
     }
 
-  }, [user, isUserLoading, redirectUrl, router]);
+  }, [user, firebaseUser, isUserLoading, redirectUrl, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +58,7 @@ function LoginPageContent() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // Let the useEffect handle redirection
     } catch (err: any) {
       setError(err.message);
     }
@@ -58,27 +69,23 @@ function LoginPageContent() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      const { isNewUser } = getAdditionalUserInfo(result) || { isNewUser: false };
+      const additionalUserInfo = getAdditionalUserInfo(result);
       
-      if (isNewUser) {
+      if (additionalUserInfo?.isNewUser) {
         const newUser = result.user;
         const userDocRef = doc(firestore, 'users', newUser.uid);
         
-        // Ensure the user document exists before assigning a role
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            const userData = {
-              uid: newUser.uid,
-              email: newUser.email,
-              displayName: newUser.displayName,
-              photoURL: newUser.photoURL,
-              role: 'Rider' as const,
-              createdAt: serverTimestamp(),
-            };
-            await setDoc(userDocRef, userData, { merge: true });
-        }
+        const userData = {
+          uid: newUser.uid,
+          email: newUser.email,
+          displayName: newUser.displayName,
+          photoURL: newUser.photoURL,
+          role: 'Rider' as const,
+          createdAt: serverTimestamp(),
+        };
+        await setDoc(userDocRef, userData);
       }
-
+      // Let the useEffect handle redirection
     } catch (err: any) {
       setError(err.message);
     }
