@@ -52,7 +52,6 @@ export default function AdminSchedulePage() {
       <PageHeader 
         title="Full Schedule" 
         description="View all scheduled lessons. Click a day to see details." 
-        className="text-left px-0"
       />
       <div className="mt-8 grid gap-8 md:grid-cols-3">
         <div className="md:col-span-1">

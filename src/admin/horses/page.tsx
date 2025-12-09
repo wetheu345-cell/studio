@@ -55,7 +55,7 @@ export default function AdminHorsesPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
-        <PageHeader title="Manage Horses" className="text-left px-0" />
+        <PageHeader title="Manage Horses" />
         <Button onClick={handleAddHorse}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Horse
         </Button>

@@ -89,7 +89,6 @@ export default function AdminRentalsPage() {
       <PageHeader
         title="Museum Rental Requests"
         description="Review and manage all incoming requests for museum rentals."
-        className="text-left px-0"
       />
       <Card className="mt-8">
         <CardContent className="pt-6">

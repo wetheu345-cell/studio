@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <PageHeader title="Admin Dashboard" description="Welcome back! Here's a summary of your operations." className="text-left px-0" />
+      <PageHeader title="Admin Dashboard" description="Welcome back! Here's a summary of your operations." />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (

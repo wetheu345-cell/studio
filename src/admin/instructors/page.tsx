@@ -55,7 +55,7 @@ export default function AdminInstructorsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
-        <PageHeader title="Manage Instructors" className="text-left px-0" />
+        <PageHeader title="Manage Instructors" />
         <Button onClick={handleAddInstructor}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Instructor
         </Button>
