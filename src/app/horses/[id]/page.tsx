@@ -1,3 +1,4 @@
+
 'use client';
 import Image from "next/image"
 import { notFound, useParams } from "next/navigation"
@@ -56,7 +57,7 @@ export default function HorseProfilePage() {
           />
         </div>
         <div className="flex flex-col justify-center">
-          <h1 className="font-headline text-4xl md:text-5xl font-bold">{horse.name}</h1>
+          <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-wide">{horse.name}</h1>
           <p className="text-muted-foreground text-lg mt-2">{horse.breed}</p>
           
           <div className="mt-6 space-y-4 font-body text-lg">

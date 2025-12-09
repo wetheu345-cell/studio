@@ -24,7 +24,7 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
         </div>
         <CardContent className="p-4 flex-1 flex flex-col justify-between">
           <div>
-            <h3 className="font-headline text-xl font-semibold">{instructor.name}</h3>
+            <h3 className="font-headline text-xl font-semibold tracking-wide">{instructor.name}</h3>
             <p className="text-muted-foreground">{instructor.specialty}</p>
           </div>
           <Button variant="link" className="p-0 h-auto justify-start mt-2">

@@ -1,3 +1,4 @@
+
 'use client';
 import Image from "next/image"
 import { notFound, useParams } from "next/navigation"
@@ -60,7 +61,7 @@ export default function InstructorProfilePage() {
             />
           </div>
           <div className="text-center mt-4">
-            <h2 className="font-headline text-3xl font-bold">{instructor.name}</h2>
+            <h2 className="font-headline text-3xl font-bold tracking-wide">{instructor.name}</h2>
             <p className="text-muted-foreground text-lg">{instructor.specialty}</p>
             <div className="flex justify-center items-center gap-1 mt-2 text-amber-500">
                 <Star className="w-5 h-5 fill-current" />
@@ -74,7 +75,7 @@ export default function InstructorProfilePage() {
         </div>
 
         <div className="md:col-span-2 flex flex-col justify-center">
-          <h1 className="font-headline text-4xl font-bold border-b pb-4">About {instructor.name.split(' ')[0]}</h1>
+          <h1 className="font-headline text-4xl font-bold border-b pb-4 tracking-wide">About {instructor.name.split(' ')[0]}</h1>
           <div className="mt-6 space-y-4 font-body text-lg text-muted-foreground leading-relaxed">
             <p>{instructor.bio}</p>
             <p>With a deep love for horses and a commitment to safety, {instructor.name.split(' ')[0]} provides a supportive and enriching learning environment. Whether you're stepping into the saddle for the first time or perfecting your technique, you're in great hands.</p>

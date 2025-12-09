@@ -1,6 +1,6 @@
 
 'use client';
-import { Facebook, Twitter, Instagram, Youtube, Linkedin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Linkedin, Heart } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
@@ -31,12 +31,13 @@ export function Footer() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:col-span-2">
             <div className="space-y-2">
-                <h4 className="font-headline text-lg">Quick Links</h4>
+                <h4 className="font-headline text-lg tracking-wide">Quick Links</h4>
                 <ul className="space-y-1">
                     <li><Link href="/about" className="text-muted-foreground hover:text-primary">About Us</Link></li>
                     <li><Link href="/booking" className="text-muted-foreground hover:text-primary">Booking</Link></li>
                     <li><Link href="/horses" className="text-muted-foreground hover:text-primary">Our Horses</Link></li>
                     <li><Link href="/instructors" className="text-muted-foreground hover:text-primary">Instructors</Link></li>
+                    <li><a href="https://ebonyhorsewomen.org/donate" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">Donate</a></li>
                     {user ? (
                         <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin</Link></li>
                     ) : (
@@ -45,7 +46,7 @@ export function Footer() {
                 </ul>
             </div>
              <div className="space-y-2">
-                <h4 className="font-headline text-lg">Contact Us</h4>
+                <h4 className="font-headline text-lg tracking-wide">Contact Us</h4>
                 <ul className="space-y-1 text-muted-foreground text-sm">
                     <li>337 Vine Street</li>
                     <li>Hartford, CT 06112</li>
@@ -54,7 +55,7 @@ export function Footer() {
                 </ul>
             </div>
             <div className="space-y-2">
-                <h4 className="font-headline text-lg">Follow Us</h4>
+                <h4 className="font-headline text-lg tracking-wide">Follow Us</h4>
                 <div className="flex space-x-4">
                     <Link href="https://www.facebook.com/EbonyHorsewomenCenter" aria-label="Facebook"><Facebook className="h-6 w-6 text-muted-foreground hover:text-primary" /></Link>
                     <Link href="https://www.instagram.com/ebonyhorsewomen" aria-label="Instagram"><Instagram className="h-6 w-6 text-muted-foreground hover:text-primary" /></Link>

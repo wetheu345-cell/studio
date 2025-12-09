@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Menu, User, LogOut, Heart } from 'lucide-react';
 import { signOut, Auth } from 'firebase/auth';
 
 import { cn } from '@/lib/utils';
@@ -87,12 +87,18 @@ export function Header() {
           <div className="w-full flex-1 md:w-auto md:flex-none">
              {/* Can add a search bar here if needed */}
           </div>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2">
             {!loading && !user && (
                 <Button variant="ghost" asChild>
                     <Link href="/login">Log in</Link>
                 </Button>
             )}
+             <Button variant="outline" asChild>
+                <a href="https://ebonyhorsewomen.org/donate" target="_blank" rel="noopener noreferrer">
+                    <Heart className="mr-2 h-4 w-4"/>
+                    Donate
+                </a>
+            </Button>
             <Button asChild>
               <Link href="/booking">Book Now</Link>
             </Button>

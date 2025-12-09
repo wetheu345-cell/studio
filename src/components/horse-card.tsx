@@ -24,7 +24,7 @@ export function HorseCard({ horse }: HorseCardProps) {
         </div>
         <CardContent className="p-4 flex-1 flex flex-col justify-between">
           <div>
-            <h3 className="font-headline text-xl font-semibold">{horse.name}</h3>
+            <h3 className="font-headline text-xl font-semibold tracking-wide">{horse.name}</h3>
             <p className="text-muted-foreground">{horse.breed}</p>
           </div>
           <Button variant="link" className="p-0 h-auto justify-start mt-2">

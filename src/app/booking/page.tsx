@@ -21,7 +21,7 @@ export default function BookingPage({
           <Card className={`hover:border-accent cursor-pointer transition-all duration-300 ${type === 'Regular' ? 'border-accent border-2' : ''}`}>
             <CardHeader className="flex-row items-center gap-4">
               <div>
-                <CardTitle className="font-headline text-2xl">Regular Lesson</CardTitle>
+                <CardTitle className="font-headline text-2xl tracking-wide">Regular Lesson</CardTitle>
                 <CardDescription>Focus on skill, horsemanship, and fun. For all levels.</CardDescription>
               </div>
               <ArrowRight className="h-8 w-8 text-muted-foreground ml-auto" />
@@ -32,7 +32,7 @@ export default function BookingPage({
           <Card className={`hover:border-accent cursor-pointer transition-all duration-300 ${type === 'Therapy' ? 'border-accent border-2' : ''}`}>
             <CardHeader className="flex-row items-center gap-4">
               <div>
-                <CardTitle className="font-headline text-2xl">Therapy Session</CardTitle>
+                <CardTitle className="font-headline text-2xl tracking-wide">Therapy Session</CardTitle>
                 <CardDescription>A guided session for emotional growth and well-being.</CardDescription>
               </div>
               <ArrowRight className="h-8 w-8 text-muted-foreground ml-auto" />

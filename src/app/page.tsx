@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -57,7 +58,7 @@ export default function Home() {
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Choose Your Experience</h2>
+              <h2 className="text-3xl font-bold tracking-wide sm:text-5xl font-headline">Choose Your Experience</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
                 We offer a variety of lessons tailored to your needs, whether you're looking for recreation or therapy.
               </p>
@@ -66,7 +67,7 @@ export default function Home() {
           <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none mt-12">
             <Card className="hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
-                <CardTitle className="font-headline text-2xl">Regular Lessons</CardTitle>
+                <CardTitle className="font-headline text-2xl tracking-wide">Regular Lessons</CardTitle>
                 <CardDescription>For all skill levels, from beginners to advanced riders.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -82,7 +83,7 @@ export default function Home() {
             </Card>
             <Card className="hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
-                <CardTitle className="font-headline text-2xl">Therapy Lessons</CardTitle>
+                <CardTitle className="font-headline text-2xl tracking-wide">Therapy Lessons</CardTitle>
                 <CardDescription>Utilizing horses to promote emotional growth and learning.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -103,7 +104,7 @@ export default function Home() {
       <section id="horses" className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Meet Our Gentle Giants</h2>
+            <h2 className="text-3xl font-bold tracking-wide sm:text-5xl font-headline">Meet Our Gentle Giants</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed font-body">
               Our horses are the heart of our program. Each has a unique personality and is trained to work with riders of all abilities.
             </p>
@@ -124,7 +125,7 @@ export default function Home() {
       <section id="instructors" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Our Expert Instructors</h2>
+            <h2 className="text-3xl font-bold tracking-wide sm:text-5xl font-headline">Our Expert Instructors</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed font-body">
               Learn from the best. Our instructors are passionate, experienced, and dedicated to your success and well-being.
             </p>
