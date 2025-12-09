@@ -1,6 +1,6 @@
+
 'use client';
 import { Facebook, Instagram, Youtube, Linkedin } from 'lucide-react';
-import { Logo } from '@/components/icons';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 
@@ -17,9 +17,27 @@ function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
+function Logo(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="120"
+      height="40"
+      viewBox="0 0 120 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+        <text x="10" y="30" fontFamily="Belleza, sans-serif" fontSize="30" fill="currentColor">
+            EHW
+        </text>
+    </svg>
+  );
+}
+
 export function Footer() {
     const { user } = useUser();
     const isAdmin = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Instructor';
+
   return (
     <footer className="border-t py-10">
       <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">

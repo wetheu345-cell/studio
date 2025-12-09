@@ -1,3 +1,4 @@
+
 'use client';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AdminSidebar } from "./_components/admin-sidebar"
@@ -18,29 +19,33 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isUserLoading) {
+      // Still waiting for user data to load.
       return;
     }
 
     if (!user) {
-      router.push('/login');
+      // If loading is finished and there's no user, redirect to login.
+      router.push('/login?redirect=/admin');
       return;
     }
     
     // Check if the user's role allows access to the admin dashboard
-    if (user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin') {
+    const hasAdminAccess = user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin';
+    if (hasAdminAccess) {
         setIsAuthorized(true);
     } else {
-        // If the user is not an admin, instructor, or manager, redirect them.
+        // If the user is not authorized, redirect them to their account page.
         router.push('/account');
     }
   }, [user, isUserLoading, router]);
 
   // While checking for authorization, show a loading state.
-  if (isUserLoading || !isAuthorized) {
+  if (!isAuthorized) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
             <div className="animate-pulse">
                 <Logo className="h-12 w-auto text-muted-foreground" />
+                <p className="text-muted-foreground mt-2">Checking permissions...</p>
             </div>
         </div>
     );

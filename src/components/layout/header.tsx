@@ -42,6 +42,7 @@ export function Header() {
   const displayName = user?.displayName || firebaseUser?.displayName;
   const photoURL = user?.photoURL || firebaseUser?.photoURL;
   const email = firebaseUser?.email;
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Instructor';
 
   const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/culture-rally.firebasestorage.app/o/logo.png?alt=media&token=REPLACE_WITH_YOUR_TOKEN';
 
@@ -130,7 +131,7 @@ export function Header() {
                     <DropdownMenuItem asChild>
                       <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
                     </DropdownMenuItem>
-                    { (user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Instructor') && (
+                    { isAdmin && (
                        <DropdownMenuItem asChild>
                         <Link href="/admin"><LayoutDashboard className="mr-2 h-4 w-4" /> Admin</Link>
                       </DropdownMenuItem>
