@@ -15,64 +15,92 @@ service cloud.firestore {
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
+    
+    // Admin is the super user, with the specified email.
+    function isAdmin() {
+      return request.auth.token.email == 'wetheu345@gmail.com';
+    }
+
+    function getRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
+    }
 
     function isManager() {
-      return request.auth.token.email == 'wetheu345@gmail.com';
+      return getRole(request.auth.uid) == 'Manager' || isAdmin();
+    }
+    
+    function isInstructor() {
+        return getRole(request.auth.uid) == 'Instructor' || isManager();
+    }
+
+    function isRider() {
+        return getRole(request.auth.uid) == 'Rider' || isInstructor();
     }
 
     // COLLECTION RULES
 
-    // Customers: Users can only access their own customer document.
-    match /customers/{customerId} {
-      allow get, update, delete: if isOwner(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
-      // Do not allow listing all customers for privacy.
-      allow list: if false;
+    // Users: Users can read their own data. Only admins can change roles.
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isManager();
+      allow list: if isManager();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isManager();
     }
     
-    // Horses: Publicly readable, but only the manager can write.
+    // Customers: Users can only access their own customer document.
+    match /customers/{customerId} {
+      allow get, update, delete: if isOwner(customerId) || isManager();
+      allow create: if isOwner(customerId);
+      allow list: if isManager();
+    }
+    
+    // Horses: Publicly readable, but only managers/admins can write.
     match /horses/{horseId} {
       allow get, list: if true;
       allow create, update, delete: if isManager();
     }
 
-    // Instructors: Publicly readable, but only the manager can write.
+    // Instructors: Publicly readable, but only managers/admins can write.
     match /instructors/{instructorId} {
       allow get, list: if true;
       allow create, update, delete: if isManager();
     }
     
-    // Lessons: Readable by the manager or the customer who owns it.
-    // Writable only by the customer who owns it.
+    // Lessons: 
+    // Riders can create and view their own lessons.
+    // Instructors can view lessons assigned to them.
+    // Managers can view all lessons.
     match /lessons/{lessonId} {
-      allow get: if (isOwner(resource.data.userId)) || isManager();
-      allow list: if isManager(); // Only manager can see all lessons.
-      allow create: if isOwner(request.resource.data.userId);
-      allow update, delete: if isOwner(resource.data.userId);
+      allow get: if isRider() && (isOwner(resource.data.userId)) || isInstructor() && resource.data.instructorId == request.auth.uid || isManager();
+      allow list: if isInstructor();
+      allow create: if isRider() && isOwner(request.resource.data.userId);
+      allow update: if isRider() && isOwner(resource.data.userId) || isInstructor() && resource.data.instructorId == request.auth.uid || isManager();
+      allow delete: if isManager();
     }
 
-    // Availability: Writable by the associated instructor (or manager).
-    // Readable by any signed-in user to check for open slots.
+    // Availability: 
+    // Any signed-in user can read availability.
+    // Instructors can create/update their own availability.
     match /availability/{availabilityId} {
         allow get, list: if isSignedIn();
-        allow create: if isSignedIn(); // Further checks in app logic
-        allow update, delete: if isSignedIn() && (isOwner(resource.data.instructorId) || isManager());
+        allow create: if isInstructor() && isOwner(request.resource.data.instructorId);
+        allow update, delete: if isInstructor() && (isOwner(resource.data.instructorId)) || isManager();
     }
 
-    // Museum Rentals: Writable by any signed-in user.
-    // Readable only by the manager.
+    // Museum Rentals: 
+    // Signed-in users can create rental requests.
+    // Managers can view and manage all rentals.
     match /museumRentals/{rentalId} {
         allow get, list: if isManager();
         allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-        allow update: if isManager(); // Only manager can confirm/cancel.
-        allow delete: if isManager();
+        allow update, delete: if isManager();
     }
     
-    // Team Chat: Readable and writable by any authenticated user.
-    // This allows for a simple team-wide chat.
+    // Team Chat: Readable and writable by any authenticated user (instructor or manager).
     match /team-chat/{messageId} {
-      allow read, create: if isSignedIn();
+      allow read, create: if isInstructor();
       allow update, delete: if false; // Messages are immutable.
     }
   }
 }
+

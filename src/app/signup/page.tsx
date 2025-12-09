@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
 import { useAuth, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,15 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { validateSignupCode } from '@/ai/flows/validate-signup-code';
-
-type UserRole = 'Rider' | 'Instructor';
+import type { UserRole } from '@/lib/types';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<UserRole>('Rider');
   const [registrationCode, setRegistrationCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export default function SignupPage() {
       return;
     }
 
-    if (role === 'Instructor') {
+    if (role === 'Instructor' || role === 'Manager') {
         const { isValid } = await validateSignupCode(registrationCode);
         if (!isValid) {
             setError('Invalid registration code.');
@@ -52,23 +52,38 @@ export default function SignupPage() {
             return;
         }
     }
+    
+    if (role === 'Admin') {
+        setError('Cannot sign up as Admin.');
+        setIsSigningUp(false);
+        return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
+      
+      await updateProfile(newUser, { displayName });
 
       const userDocRef = doc(firestore, 'users', newUser.uid);
       const userData = {
         uid: newUser.uid,
         email: newUser.email,
-        displayName: newUser.email, 
+        displayName: displayName, 
         role: role,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
       };
       
-      await setDoc(userDocRef, userData);
+      setDoc(userDocRef, userData)
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: userData
+            }));
+        });
 
-      if (role === 'Instructor') {
+      if (role === 'Instructor' || role === 'Manager') {
         router.push('/admin');
       } else {
         router.push('/account');
@@ -95,10 +110,18 @@ export default function SignupPage() {
         displayName: newUser.displayName,
         photoURL: newUser.photoURL,
         role: 'Rider', // Default role for Google Sign-in
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
       };
 
-      await setDoc(userDocRef, userData, { merge: true });
+      setDoc(userDocRef, userData, { merge: true })
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: userData
+            }));
+        });
+        
       router.push('/account');
     } catch (err: any) {
       setError(err.message);
@@ -137,6 +160,10 @@ export default function SignupPage() {
               </div>
             </div>
             <div className="grid gap-2">
+                <Label htmlFor="displayName">Full Name</Label>
+                <Input id="displayName" type="text" placeholder="Jane Doe" required value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
@@ -156,7 +183,7 @@ export default function SignupPage() {
                 </SelectContent>
               </Select>
             </div>
-            {role === 'Instructor' && (
+            {(role === 'Instructor' || role === 'Manager') && (
                 <div className="grid gap-2">
                     <Label htmlFor="registrationCode">Registration Code</Label>
                     <Input id="registrationCode" type="text" placeholder="Enter admin-provided code" required value={registrationCode} onChange={(e) => setRegistrationCode(e.target.value)} />
@@ -180,3 +207,4 @@ export default function SignupPage() {
     </div>
   );
 }
+

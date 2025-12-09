@@ -1,4 +1,15 @@
 
+export type UserRole = 'Admin' | 'Manager' | 'Instructor' | 'Rider';
+
+export interface User {
+  uid: string;
+  email: string;
+  displayName?: string;
+  photoURL?: string;
+  role: UserRole;
+  createdAt: any;
+}
+
 export interface Horse {
   id: string;
   name: string;
@@ -68,3 +79,4 @@ export interface MuseumRental {
   notes?: string;
   status: 'Pending' | 'Confirmed' | 'Cancelled';
 }
+
