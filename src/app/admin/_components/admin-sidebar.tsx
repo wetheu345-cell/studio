@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
-import { Calendar, Horse, Users, LayoutDashboard, LogOut, Settings } from "lucide-react"
+import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 export function AdminSidebar() {
@@ -20,7 +20,7 @@ export function AdminSidebar() {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/schedule", label: "Schedule", icon: Calendar },
-    { href: "/admin/horses", label: "Horses", icon: Horse },
+    { href: "/admin/horses", label: "Horses", icon: Heart },
     { href: "/admin/instructors", label: "Instructors", icon: Users },
   ]
   return (
