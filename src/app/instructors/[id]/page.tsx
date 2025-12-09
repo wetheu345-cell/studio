@@ -12,7 +12,8 @@ import { useMemo } from "react";
 
 export default function InstructorProfilePage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
-  const instructorRef = useMemo(() => firestore ? doc(firestore, 'instructors', params.id) : null, [firestore, params.id]);
+  const instructorId = params.id;
+  const instructorRef = useMemo(() => firestore ? doc(firestore, 'instructors', instructorId) : null, [firestore, instructorId]);
   const { data: instructor, loading } = useDoc<Instructor>(instructorRef);
 
 

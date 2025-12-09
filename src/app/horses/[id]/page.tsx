@@ -13,7 +13,8 @@ import { useMemo } from "react";
 
 export default function HorseProfilePage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
-  const horseRef = useMemo(() => firestore ? doc(firestore, 'horses', params.id) : null, [firestore, params.id]);
+  const horseId = params.id;
+  const horseRef = useMemo(() => firestore ? doc(firestore, 'horses', horseId) : null, [firestore, horseId]);
   const { data: horse, loading } = useDoc<Horse>(horseRef);
 
   if (loading) {
