@@ -1,21 +1,14 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-// A simple, robust function to get the Firebase app instance.
-function getFirebaseApp(): FirebaseApp {
-  if (getApps().length > 0) {
-    return getApp();
-  }
-  return initializeApp(firebaseConfig);
-}
-
-// IMPORTANT: This function is now simplified to be more reliable.
-export function initializeFirebase() {
-  const firebaseApp = getFirebaseApp();
+function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore } {
+  const isInitialized = getApps().length > 0;
+  const firebaseApp = isInitialized ? getApp() : initializeApp(firebaseConfig);
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
@@ -23,6 +16,9 @@ export function initializeFirebase() {
   };
 }
 
+const { firebaseApp, auth, firestore } = initializeFirebase();
+
+export { initializeFirebase, firebaseApp, auth, firestore };
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
