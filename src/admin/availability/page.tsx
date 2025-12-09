@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { Instructor, Availability } from '@/lib/types';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, startOfWeek, isSameDay } from 'date-fns';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 const generateTimeSlots = (startHour: number, endHour: number) => {
@@ -23,7 +22,7 @@ const generateTimeSlots = (startHour: number, endHour: number) => {
 };
 
 export default function AvailabilityPage() {
-  const { user } = useUser();
+  const { firebaseUser } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   
@@ -32,8 +31,8 @@ export default function AvailabilityPage() {
   const [endTime, setEndTime] = useState<string>('');
   
   const instructorsQuery = useMemo(() => 
-    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
-    [firestore, user]
+    (firestore && firebaseUser ? query(collection(firestore, 'instructors'), where('userId', '==', firebaseUser.uid)) : null),
+    [firestore, firebaseUser]
   );
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
@@ -100,10 +99,10 @@ export default function AvailabilityPage() {
 
         if (operation === 'update' && existingDocId) {
             availabilityDocRef = doc(firestore, 'availability', existingDocId);
-            await updateDoc(availabilityDocRef, availabilityData);
+            await updateDoc(availabilityDocRef, { timeSlots: newTimeSlots });
         } else {
-            availabilityDocRef = collection(firestore, 'availability');
-            await addDoc(availabilityDocRef, availabilityData);
+            const collectionRef = collection(firestore, 'availability');
+            await addDoc(collectionRef, availabilityData);
         }
 
         toast({ title: 'Success', description: 'Availability updated.' });
@@ -111,7 +110,7 @@ export default function AvailabilityPage() {
         setEndTime('');
     } catch (error) {
         console.error("Error adding time slot:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not update availability.' });
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'availability', operation: 'write', requestResourceData: newSlot }));
     }
   };
 
