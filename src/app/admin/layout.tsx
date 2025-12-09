@@ -40,7 +40,7 @@ export default function AdminLayout({
   }, [user, isUserLoading, router]);
 
   // While checking for authorization, show a loading state.
-  if (!isAuthorized) {
+  if (isUserLoading || !isAuthorized) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
             <div className="animate-pulse">
@@ -57,7 +57,9 @@ export default function AdminLayout({
       <AdminSidebar />
       <SidebarInset>
         <AdminHeader />
-        {children}
+        <main className="h-full">
+            {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
