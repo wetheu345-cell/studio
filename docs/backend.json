@@ -10,6 +10,10 @@
           "type": "string",
           "description": "Unique identifier for the Lesson entity."
         },
+        "lessonType": {
+          "type": "string",
+          "description": "Type of lesson (therapy or regular)."
+        },
         "instructorId": {
           "type": "string",
           "description": "Reference to Instructor. (Relationship: Instructor 1:N Lesson)"
@@ -18,13 +22,9 @@
           "type": "string",
           "description": "Reference to Horse. (Relationship: Horse 1:N Lesson)"
         },
-        "studentId": {
+        "customerId": {
           "type": "string",
-          "description": "Reference to Student. (Relationship: Student 1:N Lesson)"
-        },
-        "lessonType": {
-          "type": "string",
-          "description": "Type of lesson (Therapy or Regular)."
+          "description": "Reference to Customer. (Relationship: Customer 1:N Lesson)"
         },
         "startTime": {
           "type": "string",
@@ -38,20 +38,15 @@
         },
         "paymentId": {
           "type": "string",
-          "description": "Reference to Payment. (Relationship: Lesson 1:1 Payment)"
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any notes for the lesson",
-          "format": "string"
+          "description": "Reference to Payment. (Relationship: Payment 1:1 Lesson)"
         }
       },
       "required": [
         "id",
+        "lessonType",
         "instructorId",
         "horseId",
-        "studentId",
-        "lessonType",
+        "customerId",
         "startTime",
         "endTime",
         "paymentId"
@@ -67,13 +62,9 @@
           "type": "string",
           "description": "Unique identifier for the Instructor entity."
         },
-        "firstName": {
+        "name": {
           "type": "string",
-          "description": "First name of the instructor."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the instructor."
+          "description": "Name of the instructor."
         },
         "expertise": {
           "type": "string",
@@ -81,20 +72,14 @@
         },
         "availability": {
           "type": "string",
-          "description": "Availability schedule of the instructor."
-        },
-        "contactNumber": {
-          "type": "string",
-          "description": "Contact number of the instructor."
+          "description": "Instructor's availability schedule."
         }
       },
       "required": [
         "id",
-        "firstName",
-        "lastName",
+        "name",
         "expertise",
-        "availability",
-        "contactNumber"
+        "availability"
       ]
     },
     "Horse": {
@@ -117,15 +102,15 @@
         },
         "suitability": {
           "type": "string",
-          "description": "Suitability for different lesson types."
+          "description": "Suitability of the horse for different lesson types."
         },
         "availability": {
           "type": "string",
-          "description": "Availability schedule of the horse."
+          "description": "Horse's availability schedule."
         },
-        "healthStatus": {
+        "health": {
           "type": "string",
-          "description": "Health status of the horse."
+          "description": "Health information for the horse."
         }
       },
       "required": [
@@ -134,43 +119,43 @@
         "description",
         "suitability",
         "availability",
-        "healthStatus"
+        "health"
       ]
     },
-    "Student": {
+    "Customer": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Student",
+      "title": "Customer",
       "type": "object",
-      "description": "Represents a student.",
+      "description": "Represents a customer.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Student entity."
+          "description": "Unique identifier for the Customer entity."
         },
         "firstName": {
           "type": "string",
-          "description": "First name of the student."
+          "description": "First name of the customer."
         },
         "lastName": {
           "type": "string",
-          "description": "Last name of the student."
-        },
-        "contactNumber": {
-          "type": "string",
-          "description": "Contact number of the student."
+          "description": "Last name of the customer."
         },
         "email": {
           "type": "string",
-          "description": "Email address of the student.",
+          "description": "Email address of the customer.",
           "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the customer."
         }
       },
       "required": [
         "id",
         "firstName",
         "lastName",
-        "contactNumber",
-        "email"
+        "email",
+        "phone"
       ]
     },
     "Payment": {
@@ -183,35 +168,25 @@
           "type": "string",
           "description": "Unique identifier for the Payment entity."
         },
-        "studentId": {
-          "type": "string",
-          "description": "Reference to Student. (Relationship: Student 1:N Payment)"
+        "amount": {
+          "type": "number",
+          "description": "Amount paid for the lesson."
         },
         "paymentDate": {
           "type": "string",
           "description": "Date of the payment.",
           "format": "date-time"
         },
-        "amount": {
-          "type": "number",
-          "description": "Amount paid."
-        },
         "paymentMethod": {
           "type": "string",
-          "description": "Payment method used."
-        },
-        "transactionId": {
-          "type": "string",
-          "description": "Transaction identifier."
+          "description": "Method of payment (e.g., credit card, cash)."
         }
       },
       "required": [
         "id",
-        "studentId",
-        "paymentDate",
         "amount",
-        "paymentMethod",
-        "transactionId"
+        "paymentDate",
+        "paymentMethod"
       ]
     }
   },
@@ -230,11 +205,11 @@
           "schema": {
             "$ref": "#/backend/entities/Lesson"
           },
-          "description": "Stores information about each lesson.  Instructor, Horse, and Student IDs are present on each document.",
+          "description": "Stores horse riding lesson information. Includes denormalized instructorId, horseId, and customerId to simplify security rules.",
           "params": [
             {
               "name": "lessonId",
-              "description": "The unique identifier for the lesson."
+              "description": "Unique identifier for the lesson."
             }
           ]
         }
@@ -246,11 +221,11 @@
           "schema": {
             "$ref": "#/backend/entities/Instructor"
           },
-          "description": "Stores information about each instructor.",
+          "description": "Stores instructor profiles and availability.",
           "params": [
             {
               "name": "instructorId",
-              "description": "The unique identifier for the instructor."
+              "description": "Unique identifier for the instructor."
             }
           ]
         }
@@ -262,27 +237,27 @@
           "schema": {
             "$ref": "#/backend/entities/Horse"
           },
-          "description": "Stores information about each horse.",
+          "description": "Stores horse profiles, descriptions, and suitability for lessons.",
           "params": [
             {
               "name": "horseId",
-              "description": "The unique identifier for the horse."
+              "description": "Unique identifier for the horse."
             }
           ]
         }
       },
       {
-        "path": "/students/{studentId}",
+        "path": "/customers/{customerId}",
         "definition": {
-          "entityName": "Student",
+          "entityName": "Customer",
           "schema": {
-            "$ref": "#/backend/entities/Student"
+            "$ref": "#/backend/entities/Customer"
           },
-          "description": "Stores information about each student.",
+          "description": "Stores customer information.",
           "params": [
             {
-              "name": "studentId",
-              "description": "The unique identifier for the student."
+              "name": "customerId",
+              "description": "Unique identifier for the customer."
             }
           ]
         }
@@ -294,16 +269,16 @@
           "schema": {
             "$ref": "#/backend/entities/Payment"
           },
-          "description": "Stores information about each payment.",
+          "description": "Stores payment information for lessons.",
           "params": [
             {
               "name": "paymentId",
-              "description": "The unique identifier for the payment."
+              "description": "Unique identifier for the payment."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the EHW Lessons application, prioritizing security, scalability, and ease of debugging. It leverages denormalization and structural segregation to ensure authorization independence, eliminate the need for `get()` calls in security rules, and support atomic operations. The structure also caters to QAPs (Rules are not Filters) by segregating data with different access requirements into different collections. This will prevent the login page and admin pages from switching rapidly, it also supports admin configuration of instructors and horses. The overall structure has been triple checked for common errors.\n\n**Authorization Independence (Denormalization):**\nAuthorization for lessons, instructors, horses, students, and payments will depend on the UIDs.\n\n**Structural Segregation:**\nDifferent collections are created for each root-level entities: `lessons`, `instructors`, `horses`, `students`, and `payments`.\n\n**Access Modeling:**\nPath-Based ownership is adopted for instructor, horse, and student data (e.g., `/instructors/{instructorId}`, `/horses/{horseId}`, `/students/{studentId}`).\n\n**QAPs Support:**\nThe structural segregation of data into separate collections ensures that list operations are secure and efficient. Security rules can be applied at the collection level without needing to filter data based on content."
+    "reasoning": "The Firestore data structure is designed to support the Ebony Horse Women lesson scheduling application. It prioritizes authorization independence and clear data ownership using path-based ownership. \n\nLessons, Instructors, Horses, Customers, and Payments are stored in separate collections. Lesson documents include denormalized data like `instructorId`, `horseId`, and `customerId` to avoid `get()` calls in security rules and enable atomic operations.\n\nThis design supports the QAPs by:\n\n*   Segregation: Each entity type has its own top-level collection, ensuring a homogeneous security posture within each collection.\n*   Path-based ownership: User-owned data is nested under `/users/{userId}`, simplifying security rules based on user identity."
   }
 }

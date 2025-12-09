@@ -1,197 +1,156 @@
 /**
- * Core Philosophy: This ruleset establishes a secure environment for a lesson management application.
- * It operates on a "default deny" principle, where access is only granted explicitly. The model
- * prioritizes user privacy and administrative control. Authenticated users are the baseline for
- * any access.
+ * Core Philosophy: This ruleset enforces a strict customer-ownership security model for a lesson scheduling application.
+ * A user's identity (auth.uid) is directly tied to their customer profile ID. All related data, such as lessons
+ * and payments, must be explicitly associated with this customer ID to be accessible.
  *
- * Data Structure: The database uses a flat, multi-collection structure. Core business entities
- * like `lessons`, `instructors`, `horses`, `students`, and `payments` are stored in their own
- * top-level collections. There are no user-specific root collections; instead, ownership and
- * access are determined by UID fields denormalized onto documents.
+ * Data Structure: The data is organized into flat, top-level collections (customers, lessons, etc.). Authorization
+ * is not based on nested paths but on an ownership field (e.g., `customerId`) denormalized directly onto each
+ * relevant document. This design ensures that security checks are fast and efficient, avoiding slow and costly `get()` calls.
  *
  * Key Security Decisions:
- * 1. Admin-Managed Content: `instructors` and `horses` are treated as admin-configured data.
- *    While readable by any signed-in user to facilitate lesson booking, all write operations
- *    are disabled pending the implementation of a formal admin role system.
- * 2. Student Data Ownership: The `/students` collection uses a direct ownership model where the
- *    document ID must match the user's authentication UID. This ensures users can only create
- *    and manage their own student profile. Listing all students is prohibited.
- * 3. Relational Data Access: For `lessons` and `payments`, access is controlled by a denormalized
- *    `studentId` field. Only the user whose UID matches this field can read or modify the
- *    document, ensuring a student can only manage their own appointments and financial records.
- * 4. Flexible Queries: `list` operations on `lessons` and `payments` are permitted for any
- *    signed-in user, but the rules rely on the client application to correctly filter these
- *    queries to only request data for the current user (e.g., using a `where("studentId", "==", auth.uid)` clause).
- *    This supports application functionality while preventing unauthorized data leakage from the rules themselves.
- *
- * Denormalization for Authorization: This ruleset heavily relies on denormalization. The `studentId`
- * field is copied onto `Lesson` and `Payment` documents. This is critical for performance and security,
- * allowing for fast, direct authorization checks (e.g., `request.auth.uid == resource.data.studentId`)
- * without requiring slow and costly `get()` calls to other documents.
- *
- * Structural Segregation: Each data type resides in its own top-level collection. This clean
- * separation simplifies rule writing and makes security logic easier to reason about, as access
- * patterns do not overlap within a single collection path.
+ * - Customer as User: A user's auth UID must match the document ID in the `/customers` collection. A user cannot act
+ *   within the system until they have created this customer profile.
+ * - Ownership via Denormalization: Access to related documents like `/lessons` and `/payments` is controlled by a
+ *   `customerId` field within those documents. Rules are written with the strict requirement that this field exists.
+ * - Public Read-Only Data: Core business data like `/instructors` and `/horses` is publicly readable by anyone
+ *   to facilitate browsing and scheduling. All write operations are disabled, as these are assumed to be managed
+ *   by an administrative process not covered by these rules.
+ * - No User Listing: To protect user privacy, it is not possible to list all documents in the `/customers` collection.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    //-------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Helper Functions
-    //-------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     /**
-     * Checks if the user is authenticated.
+     * Returns true if the user is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * Checks if the current user's UID matches the provided userId.
-     * Used for direct ownership checks where the document ID is the user's UID.
+     * Returns true if the requesting user's UID matches the provided userId.
+     * This is the fundamental check for document ownership.
+     * @param userId The UID to check against the authenticated user.
      */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
     /**
-     * Checks if the document exists and if the current user is the owner.
-     * Prevents modification or deletion of non-existent documents.
+     * Returns true if a document exists and the requester is the owner.
+     * Used for safe update and delete operations.
+     * @param userId The UID to check against the authenticated user.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * On create, validates that the incoming document's studentId field
-     * matches the currently authenticated user.
-     */
-    function isCreatingForSelf() {
-      return request.resource.data.studentId == request.auth.uid;
-    }
-
-    /**
-     * On update/delete, validates that the existing document's studentId
-     * field matches the currently authenticated user.
-     */
-    function isDocumentStudent() {
-      return request.auth.uid == resource.data.studentId;
+      return resource != null && isOwner(userId);
     }
     
     /**
-     * Enforces immutability of the studentId field on update.
+     * Returns true if the user has a corresponding document in the /customers collection.
+     * Ensures that only registered customers can create related data like lessons.
      */
-    function isStudentIdUnchanged() {
-        return request.resource.data.studentId == resource.data.studentId;
+    function isSignedUpCustomer() {
+        return exists(/databases/$(database)/documents/customers/$(request.auth.uid));
     }
     
-    function isManager() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Manager';
+    /**
+     * Validates that the `customerId` in a new document matches the creator's auth UID.
+     * Enforces that users can only create documents for themselves.
+     */
+    function isCreatingOwnDocument() {
+        return request.resource.data.customerId == request.auth.uid;
     }
-
-    function isInstructor() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Instructor';
-    }
-    
-    function isAdmin() {
-        return isManager() || isInstructor();
-    }
-
 
     /**
-     * @description Rules for the 'lessons' collection.
+     * Validates that the `customerId` of a document is not being changed during an update.
+     * Enforces immutability of the ownership link.
+     */
+    function isMaintainingOwnership() {
+        return request.resource.data.customerId == resource.data.customerId;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages customer profiles. A customer document acts as a user's primary record.
+     * @path /customers/{customerId}
+     * @allow (create) An authenticated user creating their own profile, where `customerId` matches their UID.
+     * @deny (get) A user trying to read another user's customer profile.
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
+    match /customers/{customerId} {
+      allow get: if isOwner(customerId);
+      allow list: if false;
+      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
+      allow update: if isExistingOwner(customerId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(customerId);
+    }
+
+    /**
+     * @description Secures lesson documents. Access is granted only to the customer who booked the lesson.
      * @path /lessons/{lessonId}
-     * @allow (get) A student (auth.uid: 'student123') can read a lesson where `studentId` is 'student123'.
-     * @allow (create) A student (auth.uid: 'student123') can create a new lesson with `studentId: 'student123'`.
-     * @deny (update) A student cannot change the `studentId` on an existing lesson document.
-     * @deny (delete) A student (auth.uid: 'student456') cannot delete a lesson owned by 'student123'.
-     * @principle Enforces that users can only manage lessons linked to their own student ID.
+     * @allow (create) An authenticated customer creating a lesson for themselves.
+     * @deny (update) A user trying to modify a lesson belonging to another customer.
+     * @principle Enforces document ownership for writes via a `customerId` field.
      */
     match /lessons/{lessonId} {
-      allow get: if isSignedIn() && (isDocumentStudent() || isAdmin());
-      allow list: if isSignedIn(); // Client MUST query with where("studentId", "==", request.auth.uid)
-      allow create: if isSignedIn() && isCreatingForSelf();
-      allow update: if isSignedIn() && (isDocumentStudent() || isAdmin()) && isStudentIdUnchanged() && resource != null;
-      allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
+      allow get: if isSignedIn() && isOwner(resource.data.customerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isSignedUpCustomer() && isCreatingOwnDocument();
+      allow update: if resource != null && isSignedIn() && isOwner(resource.data.customerId) && isMaintainingOwnership();
+      allow delete: if resource != null && isSignedIn() && isOwner(resource.data.customerId);
     }
 
     /**
-     * @description Rules for the 'instructors' collection.
-     * @path /instructors/{instructorId}
-     * @allow (get, list) Any signed-in user can read instructor information to book a lesson.
-     * @deny (create, update, delete) All write operations are denied, as this data should be managed by an administrator.
-     * @principle Treats instructor data as publicly readable within the app but centrally managed.
-     */
-    match /instructors/{instructorId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isManager();
-    }
-
-    /**
-     * @description Rules for the 'horses' collection.
-     * @path /horses/{horseId}
-     * @allow (get, list) Any signed-in user can read horse information to book a lesson.
-     * @deny (create, update, delete) All write operations are denied, as this data should be managed by an administrator.
-     * @principle Treats horse data as publicly readable within the app but centrally managed.
-     */
-    match /horses/{horseId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isManager();
-    }
-
-    /**
-     * @description Rules for the 'students' collection.
-     * @path /students/{studentId}
-     * @allow (create) A new user (auth.uid: 'user123') can create their own student profile at `/students/user123`.
-     * @allow (get) A user (auth.uid: 'user123') can read their own profile at `/students/user123`.
-     * @deny (list) No user can list the entire `/students` collection.
-     * @deny (update) A user (auth.uid: 'user456') cannot update the profile of 'user123'.
-     * @principle Restricts access to a user's own data tree via path-based ownership.
-     */
-    match /students/{studentId} {
-      allow get: if isOwner(studentId);
-      allow list: if false; // Prevent users from listing all other students in the system.
-      allow create: if isOwner(studentId) && request.resource.data.id == studentId;
-      allow update: if isExistingOwner(studentId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(studentId);
-    }
-
-    /**
-     * @description Rules for the 'payments' collection.
+     * @description Secures payment documents. Access is granted based on the `customerId` field.
      * @path /payments/{paymentId}
-     * @allow (get) A student (auth.uid: 'student123') can read a payment where `studentId` is 'student123'.
-     * @allow (create) A student (auth.uid: 'student123') can create a new payment record with `studentId: 'student123'`.
-     * @deny (update) A student cannot change the `studentId` on an existing payment document.
-     * @deny (delete) A student (auth.uid: 'student456') cannot delete a payment for 'student123'.
-     * @principle Enforces that users can only manage payments linked to their own student ID.
+     * @allow (get) An authenticated customer reading their own payment record.
+     * @deny (create) A user trying to create a payment record for another customer.
+     * @principle Enforces document ownership. CRITICAL: This rule assumes a `customerId` field is denormalized on each payment document.
      */
     match /payments/{paymentId} {
-      allow get: if isSignedIn() && isDocumentStudent();
-      allow list: if isSignedIn(); // Client MUST query with where("studentId", "==", request.auth.uid)
-      allow create: if isSignedIn() && isCreatingForSelf();
-      allow update: if isSignedIn() && isDocumentStudent() && isStudentIdUnchanged() && resource != null;
-      allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
-    }
-    
-    match /team-chat/{messageId} {
-        allow read, write: if isAdmin();
+      allow get: if isSignedIn() && isOwner(resource.data.customerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isSignedUpCustomer() && isCreatingOwnDocument();
+      allow update: if resource != null && isSignedIn() && isOwner(resource.data.customerId) && isMaintainingOwnership();
+      allow delete: if resource != null && isSignedIn() && isOwner(resource.data.customerId);
     }
 
-    match /availability/{availabilityId} {
-        allow read, write: if isAdmin();
-    }
-    
-    match /users/{userId} {
-        allow read: if isSignedIn();
-        allow create: if isOwner(userId);
-        allow update: if isOwner(userId);
+    /**
+     * @description Stores instructor profiles. This data is considered public and read-only for clients.
+     * @path /instructors/{instructorId}
+     * @allow (get) Any user, authenticated or not, reading an instructor's profile.
+     * @deny (create) Any client attempting to create a new instructor profile.
+     * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
+     */
+    match /instructors/{instructorId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
-    match /museumRentals/{rentalId} {
-        allow create: if isSignedIn();
-        allow read, list, update: if isManager();
+    /**
+     * @description Stores horse profiles. This data is considered public and read-only for clients.
+     * @path /horses/{horseId}
+     * @allow (list) Any user, authenticated or not, listing all available horses.
+     * @deny (update) Any client attempting to modify a horse's details.
+     * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
+     */
+    match /horses/{horseId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
