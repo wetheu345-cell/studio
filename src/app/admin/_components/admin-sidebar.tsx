@@ -21,13 +21,11 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { user } = useUser();
 
-  const isManager = user?.role === 'Admin' || user?.role === 'Manager';
-
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Instructor'] },
     { href: "/admin/schedule", label: "Full Schedule", icon: Calendar, roles: ['Admin', 'Manager'] },
-    { href: "/admin/my-schedule", label: "My Schedule", icon: ClipboardList, roles: ['Instructor'] },
-    { href: "/admin/availability", label: "Availability", icon: Clock, roles: ['Instructor'] },
+    { href: "/admin/my-schedule", label: "My Schedule", icon: ClipboardList, roles: ['Admin', 'Instructor'] },
+    { href: "/admin/availability", label: "Availability", icon: Clock, roles: ['Admin', 'Instructor'] },
     { href: "/admin/messaging", label: "Team Chat", icon: MessageSquare, roles: ['Admin', 'Manager', 'Instructor'] },
     { href: "/admin/horses", label: "Horses", icon: Heart, roles: ['Admin', 'Manager'] },
     { href: "/admin/instructors", label: "Instructors", icon: Users, roles: ['Admin', 'Manager'] },

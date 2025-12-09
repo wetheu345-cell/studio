@@ -63,16 +63,20 @@ function LoginPageContent() {
       if (isNewUser) {
         const newUser = result.user;
         const userDocRef = doc(firestore, 'users', newUser.uid);
-        const userData = {
-          uid: newUser.uid,
-          email: newUser.email,
-          displayName: newUser.displayName,
-          photoURL: newUser.photoURL,
-          role: 'Rider' as const,
-          createdAt: serverTimestamp(),
-        };
-
-        await setDoc(userDocRef, userData, { merge: true });
+        
+        // Ensure the user document exists before assigning a role
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            const userData = {
+              uid: newUser.uid,
+              email: newUser.email,
+              displayName: newUser.displayName,
+              photoURL: newUser.photoURL,
+              role: 'Rider' as const,
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(userDocRef, userData, { merge: true });
+        }
       }
 
     } catch (err: any) {
