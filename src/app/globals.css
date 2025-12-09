@@ -86,7 +86,6 @@
     @apply tracking-wide;
   }
   .logo-gallop-group {
-    transform-origin: 50% 70%;
     animation: gallop 1.5s ease-in-out infinite;
   }
 }
