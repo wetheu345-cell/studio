@@ -1,7 +1,7 @@
 
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import type { Message } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -19,11 +19,11 @@ export default function MessagingPage() {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const messagesCollection = useMemoFirebase(
+  const messagesCollection = useMemo(
     () => firestore ? collection(firestore, 'team-chat') : null,
     [firestore]
   );
-  const messagesQuery = useMemoFirebase(
+  const messagesQuery = useMemo(
     () => messagesCollection ? query(messagesCollection, orderBy('timestamp', 'asc')) : null,
     [messagesCollection]
   );

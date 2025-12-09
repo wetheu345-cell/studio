@@ -3,17 +3,18 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Calendar, Heart, Users, DollarSign, Video, MessageSquare, Building } from "lucide-react"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { Lesson, Horse, Instructor } from "@/lib/types";
 import { collection } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useMemo } from "react";
 
 export default function AdminDashboardPage() {
   const firestore = useFirestore();
-  const lessonsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
-  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const lessonsCollection = useMemo(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
 
   const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsCollection);
   const { data: horses, isLoading: horsesLoading } = useCollection<Horse>(horsesCollection);

@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { Horse, Lesson } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,7 +36,7 @@ export function SelectHorseDialog({
     lesson.horseId || null
   );
 
-  const horsesCollectionRef = useMemoFirebase(
+  const horsesCollectionRef = useMemo(
     () => (firestore ? collection(firestore, 'horses') : null),
     [firestore]
   );

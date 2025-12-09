@@ -2,14 +2,15 @@
 'use client';
 import { InstructorCard } from "@/components/instructor-card"
 import { PageHeader } from "@/components/page-header"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import { Instructor } from "@/lib/types";
 import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
 
 export default function InstructorsPage() {
     const firestore = useFirestore();
-    const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+    const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
     const { data: instructors, loading } = useCollection<Instructor>(instructorsCollection);
 
   return (

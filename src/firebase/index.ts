@@ -35,6 +35,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
 export * from './provider';
 export * from './client-provider';
+// useUser is now exported from provider.tsx, but we keep this for compatibility
 export * from './auth/use-user';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';

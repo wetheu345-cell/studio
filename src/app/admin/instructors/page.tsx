@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
+import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { Instructor } from "@/lib/types";
 import { collection, deleteDoc, doc } from "firebase/firestore";
 import { InstructorFormDialog } from './_components/instructor-form-dialog';
@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminInstructorsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
   const { data: instructors, isLoading } = useCollection<Instructor>(instructorsCollection);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | undefined>(undefined);

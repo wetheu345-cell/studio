@@ -1,8 +1,8 @@
 
 'use client';
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, query, where, addDoc, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { collection, query, where, addDoc, updateDoc, doc, getDocs } from 'firebase/firestore';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -31,17 +31,17 @@ export default function AvailabilityPage() {
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   
-  const instructorsCollection = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
+  const instructorsQuery = useMemo(() => 
+    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
-  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
+  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
 
   const weekStart = startOfWeek(selectedDate);
-  const availabilityQuery = useMemoFirebase(
-    () => (firestore && instructor ? query(collection(firestore, 'availability'), where('instructorId', '==', instructor.id), where('weekStartDate', '==', format(weekStart, 'yyyy-MM-dd'))) : null),
-    [firestore, instructor, selectedDate]
+  const availabilityQuery = useMemo(() => 
+    (firestore && instructor ? query(collection(firestore, 'availability'), where('instructorId', '==', instructor.id), where('weekStartDate', '==', format(weekStart, 'yyyy-MM-dd'))) : null),
+    [firestore, instructor, weekStart]
   );
   const { data: availabilityDocs, isLoading: availabilityLoading } = useCollection<Availability>(availabilityQuery);
   const availability = availabilityDocs?.[0];
@@ -70,45 +70,49 @@ export default function AvailabilityPage() {
       startTime,
       endTime,
     };
+    
+    try {
+        let availabilityDocRef;
+        let newTimeSlots;
+        let operation: 'create' | 'update' = 'create';
+        let existingDocId: string | undefined = undefined;
 
-    let availabilityDocRef;
-    let newTimeSlots;
-
-    if (availability) {
-      availabilityDocRef = doc(firestore, 'availability', availability.id);
-      newTimeSlots = [...availability.timeSlots, newSlot];
-    } else {
-        // Find if a doc for this week exists, even if useCollection hasn't caught up
+        // Check if an availability document for this week already exists
         const weekStartDateStr = format(weekStart, 'yyyy-MM-dd');
         const q = query(collection(firestore, 'availability'), where('instructorId', '==', instructor.id), where('weekStartDate', '==', weekStartDateStr));
         const existingDocs = await getDocs(q);
-        
+
         if (existingDocs.docs.length > 0) {
-            availabilityDocRef = existingDocs.docs[0].ref;
-            const existingData = existingDocs.docs[0].data() as Availability;
+            const existingDoc = existingDocs.docs[0];
+            existingDocId = existingDoc.id;
+            const existingData = existingDoc.data() as Availability;
             newTimeSlots = [...existingData.timeSlots, newSlot];
+            operation = 'update';
         } else {
-            availabilityDocRef = doc(collection(firestore, 'availability'));
             newTimeSlots = [newSlot];
         }
-    }
-    
-    const availabilityData = {
-        instructorId: instructor.id,
-        weekStartDate: format(weekStart, 'yyyy-MM-dd'),
-        timeSlots: newTimeSlots
-    };
 
-    const operation = availability ? 'update' : 'create';
-    setDoc(availabilityDocRef, availabilityData, { merge: true })
-      .then(() => {
+        const availabilityData = {
+            instructorId: instructor.id,
+            weekStartDate: weekStartDateStr,
+            timeSlots: newTimeSlots
+        };
+
+        if (operation === 'update' && existingDocId) {
+            availabilityDocRef = doc(firestore, 'availability', existingDocId);
+            await updateDoc(availabilityDocRef, availabilityData);
+        } else {
+            availabilityDocRef = collection(firestore, 'availability');
+            await addDoc(availabilityDocRef, availabilityData);
+        }
+
         toast({ title: 'Success', description: 'Availability updated.' });
         setStartTime('');
         setEndTime('');
-      })
-      .catch(error => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: availabilityDocRef.path, operation, requestResourceData: availabilityData }));
-      });
+    } catch (error) {
+        console.error("Error adding time slot:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update availability.' });
+    }
   };
 
   const handleRemoveTimeSlot = async (slotToRemove: { date: string; startTime: string; endTime: string; }) => {

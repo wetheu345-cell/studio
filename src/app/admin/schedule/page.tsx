@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Calendar } from "@/components/ui/calendar"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore } from "@/firebase";
 import type { Lesson, Instructor, Horse } from "@/lib/types";
 import { collection } from "firebase/firestore";
 import { LessonCard } from "./_components/lesson-card";
@@ -13,9 +13,9 @@ export default function AdminSchedulePage() {
   const firestore = useFirestore();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
-  const lessonsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
-  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
-  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const lessonsCollection = useMemo(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
   
   const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsCollection);
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
@@ -103,5 +103,3 @@ export default function AdminSchedulePage() {
     </div>
   )
 }
-
-    

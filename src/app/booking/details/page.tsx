@@ -1,9 +1,9 @@
 
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase'
+import { useCollection, useFirestore } from '@/firebase'
 import { collection } from 'firebase/firestore'
 import type { Horse, Instructor } from '@/lib/types'
 import { PageHeader } from '@/components/page-header'
@@ -12,7 +12,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ArrowRight, CheckCircle } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useMemo } from 'react'
 
 export default function BookingDetailsPage() {
   const router = useRouter()
@@ -26,8 +25,8 @@ export default function BookingDetailsPage() {
   const [selectedHorseId, setSelectedHorseId] = useState<string | undefined>(horseIdParam)
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | undefined>(instructorIdParam)
 
-  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
 
   const { data: horses, isLoading: horsesLoading } = useCollection<Horse>(horsesCollection);
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
@@ -51,13 +50,13 @@ export default function BookingDetailsPage() {
   const loading = horsesLoading || instructorsLoading;
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="container py-12">
       <PageHeader
         title="Customize Your Lesson"
         description="Choose your companion and guide for this unique experience."
       />
 
-      <div className="mt-12 w-full max-w-6xl space-y-12">
+      <div className="mt-12 w-full max-w-6xl mx-auto space-y-12">
         {/* Horse Selection */}
         <div>
           <h2 className="text-2xl font-headline mb-4">Select a Horse</h2>
@@ -131,7 +130,7 @@ export default function BookingDetailsPage() {
         </div>
       </div>
 
-      <div className="mt-12 w-full max-w-6xl flex justify-end">
+      <div className="mt-12 w-full max-w-6xl mx-auto flex justify-end">
         <Button size="lg" onClick={handleNext} disabled={!selectedHorseId || !selectedInstructorId}>
           Next: Schedule <ArrowRight className="ml-2 h-5 w-5" />
         </Button>

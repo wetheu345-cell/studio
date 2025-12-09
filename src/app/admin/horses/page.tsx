@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase"
+import { useCollection, useFirestore, errorEmitter, FirestorePermissionError } from "@/firebase"
 import type { Horse } from "@/lib/types";
 import { collection, deleteDoc, doc } from "firebase/firestore"
 import { HorseFormDialog } from "./_components/horse-form-dialog";
@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function AdminHorsesPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
   const { data: horses, isLoading } = useCollection<Horse>(horsesCollection);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHorse, setSelectedHorse] = useState<Horse | undefined>(undefined);

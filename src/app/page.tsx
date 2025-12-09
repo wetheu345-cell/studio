@@ -8,16 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HorseCard } from '@/components/horse-card';
 import { InstructorCard } from '@/components/instructor-card';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import { Horse, Instructor } from '@/lib/types';
 import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
   const firestore = useFirestore();
 
-  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
 
   const { data: horses } = useCollection<Horse>(horsesCollection);
   const { data: instructors } = useCollection<Instructor>(instructorsCollection);

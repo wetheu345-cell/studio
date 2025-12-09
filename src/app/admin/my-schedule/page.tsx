@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo, useState } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import type { Lesson, Instructor } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -37,15 +37,15 @@ export default function MySchedulePage() {
   const [selectedLesson, setSelectedLesson] = useState<(Lesson & { id: string }) | null>(null);
   const [lessonToCancel, setLessonToCancel] = useState<(Lesson & { id: string}) | null>(null);
 
-  const instructorsCollection = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
+  const instructorsQuery = useMemo(() => 
+    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
-  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
+  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
 
-  const lessonsQuery = useMemoFirebase(
-    () => (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id)) : null),
+  const lessonsQuery = useMemo(() => 
+    (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id)) : null),
     [firestore, instructor]
   );
   const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsQuery);

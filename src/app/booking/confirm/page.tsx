@@ -34,13 +34,13 @@ export default function BookingConfirmPage() {
   const paymentLink = "https://www.paypal.com/paypalme/HealRideLearn?country.x=US&locale.x=en_US";
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="container py-12">
       <PageHeader
         title="Booking Confirmation"
         description="Your lesson is reserved! Please complete payment to confirm."
       />
 
-      <div className="mt-12 w-full max-w-2xl">
+      <div className="mt-12 w-full max-w-2xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle>Lesson Summary</CardTitle>
