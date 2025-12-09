@@ -3,16 +3,24 @@
 
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
-import { Auth } from 'firebase/auth';
+import { Firestore, doc } from 'firebase/firestore';
+import { Auth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { useUser as useAppUserHook, type AuthState } from './auth/use-user'; 
+import { useDoc } from './firestore/use-doc';
+import type { User as AppUser } from '@/lib/types';
+import { useState, useEffect } from 'react';
 
 interface FirebaseProviderProps {
   children: ReactNode;
   firebaseApp: FirebaseApp;
   firestore: Firestore;
   auth: Auth;
+}
+
+export interface AuthState {
+  firebaseUser: FirebaseUser | null;
+  user: AppUser | null;
+  isUserLoading: boolean;
 }
 
 export interface FirebaseContextState extends AuthState {
@@ -24,13 +32,39 @@ export interface FirebaseContextState extends AuthState {
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
+const useAuthState = (auth: Auth, firestore: Firestore): AuthState => {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setIsAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, [auth]);
+
+  const userDocRef = useMemo(() => {
+    return firebaseUser ? doc(firestore, 'users', firebaseUser.uid) : null;
+  }, [firestore, firebaseUser]);
+  
+  const { data: user, isLoading: isUserDocLoading } = useDoc<AppUser>(userDocRef);
+
+  return {
+    firebaseUser,
+    user,
+    isUserLoading: isAuthLoading || (!!firebaseUser && isUserDocLoading),
+  };
+};
+
+
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
   firebaseApp,
   firestore,
   auth,
 }) => {
-  const authState = useAppUserHook(auth, firestore);
+  const authState = useAuthState(auth, firestore);
 
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
