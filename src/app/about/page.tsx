@@ -53,6 +53,16 @@ export default function AboutPage() {
                 )}
             </div>
 
+            <div className="mt-16 text-center max-w-4xl mx-auto">
+                 <h2 className="font-headline text-3xl font-bold tracking-wide">Join Our Teams</h2>
+                 <p className="text-muted-foreground leading-relaxed mt-4">
+                    Ready to take your riding to the next level? EHI is home to competitive jumping and dressage teams. We offer advanced training for dedicated riders looking to excel in their discipline.
+                 </p>
+                 <Button asChild className="mt-6">
+                    <Link href="/booking">Inquire About Joining</Link>
+                 </Button>
+            </div>
+
              <div className="mt-16 text-center max-w-4xl mx-auto">
                  <h2 className="font-headline text-3xl font-bold tracking-wide">Leading the Way in Equine Therapy</h2>
                  <p className="text-muted-foreground leading-relaxed mt-4">
