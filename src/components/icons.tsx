@@ -12,7 +12,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g className="animate-gallop" style={{ transformOrigin: '50% 70%' }}>
+      <g className="logo-gallop-group">
         <path 
           d="M45.6,10.5C42.5,10.2,38.3,11,36.4,14.4C35.9,15.5,35.8,17.9,37.6,18.9C39.4,19.9,42.5,19.1,43,17.9C43.5,16.7,42.9,15.2,41.7,14.7C42.8,13,44.9,11.3,47,11.3C48.1,11.3,49.2,12,49.2,12L47.9,8.5L45.6,10.5Z"
           fill="currentColor"
