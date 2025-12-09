@@ -17,8 +17,8 @@
  *   - Authenticated users can create lessons for themselves (`request.resource.data.userId == request.auth.uid`).
  *   - Users can only read, update, or delete their own lessons (`resource.data.userId == request.auth.uid`).
  *   - Listing the entire collection is restricted to admins to prevent data leakage.
- * - Admin-Managed Collections: The /instructors and /horses collections are strictly controlled
- *   by admins, ensuring that only authorized personnel can manage business-critical information.
+ * - Publicly Readable Data: The /instructors and /horses collections are readable by any authenticated user
+ *   to allow them to make booking decisions, but write access is strictly controlled by admins.
  *
  * Denormalization for Authorization:
  * The `userId` field is denormalized and stored in each lesson document. This is crucial for writing
@@ -124,36 +124,38 @@ service cloud.firestore {
     /**
      * @description Top-level collection for all lessons.
      * @path        /lessons/{lessonId}
-     * @allow       (read) A user can read their own lesson. Admins can read any lesson.
-     * @allow       (list) Admins can list all lessons. Users can list their own lessons (requires query with where clause).
+     * @allow       (read) A user can read their own lesson. Staff/Admins can read any lesson.
+     * @allow       (list) Staff/Admins can list all lessons. Users can list their own lessons (requires query with where clause).
      * @allow       (create) A user can create a lesson for themselves.
-     * @allow       (update, delete) A user can modify their own lesson. Admins can modify any.
+     * @allow       (update, delete) A user can modify their own lesson. Staff/Admins can modify any.
      */
     match /lessons/{lessonId} {
-      allow get: if isAccessingOwnLesson() || isAdmin();
-      allow list: if isAdmin(); // Users must query with `where('userId', '==', request.auth.uid)`
+      allow get: if isAccessingOwnLesson() || isStaff() || isAdmin();
+      allow list: if isStaff() || isAdmin(); // Users must query with `where('userId', '==', request.auth.uid)`
       allow create: if isCreatingOwnLesson();
-      allow update, delete: if isAccessingOwnLesson() || isAdmin();
+      allow update, delete: if isAccessingOwnLesson() || isStaff() || isAdmin();
     }
 
     /**
-     * @description Instructor profiles, managed exclusively by administrators.
+     * @description Instructor profiles, viewable by all, managed by administrators.
      * @path        /instructors/{instructorId}
-     * @allow       (read, write) Authenticated admins only.
-     * @deny        Any non-admin user.
+     * @allow       (read) Any authenticated user can view instructor profiles.
+     * @allow       (write) Authenticated admins only.
      */
     match /instructors/{instructorId} {
-      allow read, write: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     /**
-     * @description Horse profiles, managed exclusively by administrators.
+     * @description Horse profiles, viewable by all, managed by administrators.
      * @path        /horses/{horseId}
-     * @allow       (read, write) Authenticated admins only.
-     * @deny        Any non-admin user.
+     * @allow       (read) Any authenticated user can view horse profiles.
+     * @allow       (write) Authenticated admins only.
      */
     match /horses/{horseId} {
-      allow read, write: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
     
     /**
@@ -164,6 +166,18 @@ service cloud.firestore {
      */
     match /payments/{paymentId} {
       allow read, write: if isAdmin();
+    }
+    
+    /**
+     * @description Museum rental bookings.
+     * @path        /museumRentals/{rentalId}
+     * @allow       (create) Any signed-in user can book a rental.
+     * @allow       (read, list) Only admins can view rental information.
+     * @allow       (update, delete) Only admins can modify or cancel rentals.
+     */
+    match /museumRentals/{rentalId} {
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow read, list, update, delete: if isAdmin();
     }
 
     /**

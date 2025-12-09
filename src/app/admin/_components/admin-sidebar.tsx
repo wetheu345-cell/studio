@@ -12,8 +12,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
-import { Button } from "@/components/ui/button"
-import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList, Clock } from "lucide-react"
+import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList, Clock, Building } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 
@@ -26,6 +25,7 @@ export function AdminSidebar() {
     { href: "/admin/availability", label: "Availability", icon: Clock },
     { href: "/admin/horses", label: "Horses", icon: Heart },
     { href: "/admin/instructors", label: "Instructors", icon: Users },
+    { href: "/admin/rentals", label: "Museum Rentals", icon: Building },
   ]
   return (
     <Sidebar collapsible="icon">
@@ -45,8 +45,10 @@ export function AdminSidebar() {
                   tooltip={{ children: item.label }}
                 >
                   <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
+                    <>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -56,7 +58,7 @@ export function AdminSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" tooltip={{ children: "Settings" }}>
+            <SidebarMenuButton tooltip={{ children: "Settings" }}>
                 <Settings />
                 <span>Settings</span>
             </SidebarMenuButton>

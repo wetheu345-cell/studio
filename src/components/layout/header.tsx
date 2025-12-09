@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, User, LogOut, Heart } from 'lucide-react';
+import { Menu, User, LogOut, Heart, LayoutDashboard } from 'lucide-react';
 import { signOut, Auth } from 'firebase/auth';
 
 import { cn } from '@/lib/utils';
@@ -25,7 +25,6 @@ export function Header() {
     { href: '/high-horse', label: 'High Horse'},
     { href: '/horses', label: 'Horses' },
     { href: '/instructors', label: 'Instructors' },
-    ...(user ? [{ href: '/admin', label: 'Admin' }] : []),
   ];
 
   const handleLogout = async () => {
@@ -117,6 +116,9 @@ export function Header() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem asChild>
+                            <Link href="/admin"><LayoutDashboard className="mr-2 h-4 w-4" /> Admin</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
