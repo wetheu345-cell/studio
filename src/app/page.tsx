@@ -1,4 +1,3 @@
-
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,8 +16,8 @@ export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
   const firestore = useFirestore();
 
-  const horsesCollection = firestore ? collection(firestore, 'horses') : null;
-  const instructorsCollection = firestore ? collection(firestore, 'instructors') : null;
+  const horsesCollection = useMemo(() => (firestore ? collection(firestore, 'horses') : null), [firestore]);
+  const instructorsCollection = useMemo(() => (firestore ? collection(firestore, 'instructors') : null), [firestore]);
 
   const { data: horses } = useCollection<Horse>(horsesCollection);
   const { data: instructors } = useCollection<Instructor>(instructorsCollection);

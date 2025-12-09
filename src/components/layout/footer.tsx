@@ -1,6 +1,5 @@
-
 'use client';
-import { Facebook, Twitter, Instagram, Youtube, Linkedin, Heart } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Linkedin } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
@@ -20,6 +19,7 @@ function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function Footer() {
     const { user } = useUser();
+    const isAdmin = user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Instructor';
   return (
     <footer className="border-t py-10">
       <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -38,10 +38,12 @@ export function Footer() {
                     <li><Link href="/horses" className="text-muted-foreground hover:text-primary">Our Horses</Link></li>
                     <li><Link href="/instructors" className="text-muted-foreground hover:text-primary">Instructors</Link></li>
                     <li><a href="https://ebonyhorsewomen.org/donate" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">Donate</a></li>
-                    {user ? (
-                        <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin</Link></li>
+                    {isAdmin ? (
+                        <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin Dashboard</Link></li>
+                    ) : user ? (
+                         <li><Link href="/account" className="text-muted-foreground hover:text-primary">My Account</Link></li>
                     ) : (
-                        <li><Link href="/login" className="text-muted-foreground hover:text-primary">Admin Login</Link></li>
+                        <li><Link href="/login" className="text-muted-foreground hover:text-primary">Login</Link></li>
                     )}
                 </ul>
             </div>

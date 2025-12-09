@@ -1,8 +1,7 @@
-
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm, SubmitHandler } from 'react-hook-form'
+import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
@@ -33,43 +32,42 @@ type RentalFormData = z.infer<typeof rentalSchema>
 
 export default function MuseumRentalPage() {
   const router = useRouter()
-  const { user, isUserLoading } = useUser()
+  const { user, firebaseUser, isUserLoading } = useUser()
   const firestore = useFirestore()
   const { toast } = useToast()
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<RentalFormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<RentalFormData>({
     resolver: zodResolver(rentalSchema),
   });
-  const watchedDate = watch("date");
 
-  const onSubmit: SubmitHandler<RentalFormData> = (data) => {
-    if (!user || !firestore) {
+  const onSubmit: SubmitHandler<RentalFormData> = async (data) => {
+    if (!firebaseUser || !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to book a rental.' })
+      router.push('/login?redirect=/booking/rental');
       return
     }
 
     const rentalData = {
       ...data,
       date: format(data.date, 'yyyy-MM-dd'),
-      userId: user.uid,
-      userName: user.displayName || 'Anonymous',
-      email: user.email,
+      userId: firebaseUser.uid,
+      userName: user?.displayName || firebaseUser.displayName || 'Anonymous',
+      email: firebaseUser.email,
       status: 'Pending' as const,
     };
 
-    const collectionRef = collection(firestore, 'museumRentals');
-    addDoc(collectionRef, rentalData)
-      .then(() => {
-        toast({ title: 'Rental Request Sent!', description: "We've received your request and will be in touch shortly to confirm." })
-        router.push('/')
-      })
-      .catch((error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: collectionRef.path,
+    try {
+      const collectionRef = collection(firestore, 'museumRentals');
+      await addDoc(collectionRef, rentalData);
+      toast({ title: 'Rental Request Sent!', description: "We've received your request and will be in touch shortly to confirm." })
+      router.push('/')
+    } catch (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'museumRentals',
           operation: 'create',
           requestResourceData: rentalData,
         }));
-      });
+    }
   }
 
   return (
@@ -87,29 +85,35 @@ export default function MuseumRentalPage() {
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="date">Event Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !watchedDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {watchedDate ? format(watchedDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={watchedDate}
-                      onSelect={(day) => control.setValue('date', day || new Date())}
-                      initialFocus
-                      disabled={(day) => day < new Date(new Date().toDateString())}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Controller
+                    control={control}
+                    name="date"
+                    render={({ field }) => (
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            disabled={(day) => day < new Date(new Date().toDateString())}
+                            />
+                        </PopoverContent>
+                        </Popover>
+                    )}
+                />
                 {errors.date && <p className="text-sm text-destructive mt-1">{errors.date.message}</p>}
               </div>
               <div>
@@ -131,9 +135,9 @@ export default function MuseumRentalPage() {
             <Button type="submit" className="w-full" disabled={isUserLoading}>
               {isUserLoading ? 'Loading...' : 'Submit Request'}
             </Button>
-             {!user && !isUserLoading && (
+             {!firebaseUser && !isUserLoading && (
                 <p className="text-center text-sm text-muted-foreground">
-                    Please <a href="/login" className="underline">log in</a> or <a href="/signup" className="underline">sign up</a> to submit a request.
+                    Please <a href="/login?redirect=/booking/rental" className="underline">log in</a> or <a href="/signup" className="underline">sign up</a> to submit a request.
                 </p>
             )}
           </form>

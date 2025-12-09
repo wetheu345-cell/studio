@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -31,15 +30,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 export default function MySchedulePage() {
-  const { user } = useUser();
+  const { firebaseUser } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [selectedLesson, setSelectedLesson] = useState<(Lesson & { id: string }) | null>(null);
   const [lessonToCancel, setLessonToCancel] = useState<(Lesson & { id: string}) | null>(null);
 
   const instructorsQuery = useMemo(() => 
-    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
-    [firestore, user]
+    (firestore && firebaseUser ? query(collection(firestore, 'instructors'), where('userId', '==', firebaseUser.uid)) : null),
+    [firestore, firebaseUser]
   );
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
@@ -53,21 +52,21 @@ export default function MySchedulePage() {
   const loading = instructorsLoading || lessonsLoading;
 
   const isCancelable = (lesson: Lesson) => {
-    const lessonDateTime = new Date(`${lesson.date.split('T')[0]}T${lesson.time}:00`);
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.time}:00`);
     return isAfter(lessonDateTime, addHours(new Date(), 24));
   }
 
-  const handleCancelLesson = () => {
+  const handleCancelLesson = async () => {
     if (!firestore || !lessonToCancel) return;
 
     const lessonRef = doc(firestore, 'lessons', lessonToCancel.id);
     const lessonUpdate = { status: 'Cancelled' as const };
-    updateDoc(lessonRef, lessonUpdate)
-      .then(() => {
-        toast({ title: "Lesson Cancelled", description: "The lesson has been successfully cancelled." });
-        setLessonToCancel(null);
-      })
-      .catch(error => {
+    
+    try {
+      await updateDoc(lessonRef, lessonUpdate)
+      toast({ title: "Lesson Cancelled", description: "The lesson has been successfully cancelled." });
+      setLessonToCancel(null);
+    } catch (error) {
         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
@@ -76,12 +75,12 @@ export default function MySchedulePage() {
             requestResourceData: lessonUpdate,
           })
         );
-      });
+    }
   }
 
   return (
     <div className="p-4 md:p-8">
-      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." className="text-left" />
+      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." className="text-left px-0" />
 
       <Card className="mt-8">
         <CardContent className="pt-6">

@@ -1,8 +1,7 @@
-
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,26 +29,17 @@ export default function LoginPage() {
     }
 
     if (redirectUrl) {
-        router.push(redirectUrl);
-        return;
+      router.push(redirectUrl);
+      return;
+    }
+    
+    if (user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin') {
+      router.push('/admin');
+    } else {
+      router.push('/account');
     }
 
-    if (firestore) {
-      const userDocRef = doc(firestore, 'users', user.uid);
-      getDoc(userDocRef).then(userDoc => {
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.role === 'Instructor' || userData.role === 'Manager' || userData.role === 'Admin') {
-            router.push('/admin');
-          } else {
-            router.push('/account');
-          }
-        } else {
-          router.push('/account');
-        }
-      });
-    }
-  }, [user, isUserLoading, firestore, router, redirectUrl]);
+  }, [user, isUserLoading, redirectUrl, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,18 +48,33 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The useEffect will handle the redirect
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      // The useEffect will handle the redirect
+      const result = await signInWithPopup(auth, provider);
+      const { isNewUser } = getAdditionalUserInfo(result) || { isNewUser: false };
+      
+      if (isNewUser) {
+        const newUser = result.user;
+        const userDocRef = doc(firestore, 'users', newUser.uid);
+        const userData = {
+          uid: newUser.uid,
+          email: newUser.email,
+          displayName: newUser.displayName,
+          photoURL: newUser.photoURL,
+          role: 'Rider' as const,
+          createdAt: serverTimestamp(),
+        };
+
+        await setDoc(userDocRef, userData, { merge: true });
+      }
+
     } catch (err: any) {
       setError(err.message);
     }
@@ -131,4 +136,10 @@ export default function LoginPage() {
   );
 }
 
-    
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginPageContent />
+        </Suspense>
+    )
+}

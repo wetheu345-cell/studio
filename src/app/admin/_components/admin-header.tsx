@@ -1,7 +1,5 @@
-
 'use client';
-import { usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard } from 'lucide-react';
+import { LogOut, LayoutDashboard, User as UserIcon } from 'lucide-react';
 import { signOut, Auth } from 'firebase/auth';
 
 import { useUser, useAuth } from '@/firebase';
@@ -11,7 +9,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 
 export function AdminHeader() {
-  const { user } = useUser();
+  const { user, firebaseUser } = useUser();
   const auth = useAuth() as Auth;
 
   const handleLogout = async () => {
@@ -19,6 +17,10 @@ export function AdminHeader() {
       await signOut(auth);
     }
   };
+  
+  const displayName = user?.displayName || firebaseUser?.displayName;
+  const photoURL = user?.photoURL || firebaseUser?.photoURL;
+  const email = firebaseUser?.email;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,19 +32,19 @@ export function AdminHeader() {
         
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center gap-4">
-            {user && (
+            {firebaseUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <Avatar>
-                    <AvatarImage src={user.photoURL || ''} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={photoURL || ''} />
+                    <AvatarFallback>{email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                    <Link href="/account"><UserIcon className="mr-2 h-4 w-4" /> Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/admin"><LayoutDashboard className="mr-2 h-4 w-4" /> Admin</Link>

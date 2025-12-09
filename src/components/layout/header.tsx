@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -13,11 +12,12 @@ import { Logo } from '@/components/icons';
 import { useUser, useAuth } from '@/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Skeleton } from '../ui/skeleton';
 
 export function Header() {
   const pathname = usePathname();
-  const { user, loading } = useUser();
-  const auth = useAuth() as Auth;
+  const { user, firebaseUser, isUserLoading } = useUser();
+  const auth = useAuth();
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -37,6 +37,11 @@ export function Header() {
   if (isAdminPage) {
     return null;
   }
+  
+  const displayName = user?.displayName || firebaseUser?.displayName;
+  const photoURL = user?.photoURL || firebaseUser?.photoURL;
+  const email = firebaseUser?.email;
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -94,11 +99,6 @@ export function Header() {
              {/* Can add a search bar here if needed */}
           </div>
           <nav className="flex items-center gap-2">
-            {!loading && !user && (
-              <Button variant="ghost" asChild>
-                <Link href="/login">Log in</Link>
-              </Button>
-            )}
             <Button variant="outline" asChild>
               <a href="https://ebonyhorsewomen.org/donate" target="_blank" rel="noopener noreferrer">
                 <Heart className="mr-2 h-4 w-4"/>
@@ -109,29 +109,37 @@ export function Header() {
               <Link href="/booking">Book Now</Link>
             </Button>
 
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Avatar>
-                    <AvatarImage src={user.photoURL || ''} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin"><LayoutDashboard className="mr-2 h-4 w-4" /> Admin</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {isUserLoading ? <Skeleton className="h-10 w-10 rounded-full" /> : (
+              firebaseUser ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Avatar>
+                      <AvatarImage src={photoURL || ''} />
+                      <AvatarFallback>{email?.[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                    </DropdownMenuItem>
+                    { (user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'Instructor') && (
+                       <DropdownMenuItem asChild>
+                        <Link href="/admin"><LayoutDashboard className="mr-2 h-4 w-4" /> Admin</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Log in</Link>
+                </Button>
+              )
             )}
           </nav>
         </div>

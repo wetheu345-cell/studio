@@ -4,12 +4,21 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User as UserIcon, Mail } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AccountPage() {
-  const { user, loading } = useUser();
+  const { user, firebaseUser, isUserLoading } = useUser();
+  const router = useRouter();
 
-  if (loading) {
+  useEffect(() => {
+    if (!isUserLoading && !firebaseUser) {
+        router.push('/login');
+    }
+  }, [isUserLoading, firebaseUser, router]);
+
+  if (isUserLoading || !firebaseUser) {
     return (
       <div className="container py-12">
         <Skeleton className="h-10 w-1/3 mx-auto" />
@@ -31,13 +40,8 @@ export default function AccountPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="container py-12 text-center">
-        <PageHeader title="Access Denied" description="Please log in to view your account details." />
-      </div>
-    );
-  }
+  const displayName = user?.displayName || firebaseUser.displayName;
+  const photoURL = user?.photoURL || firebaseUser.photoURL;
 
   return (
     <div className="container py-12">
@@ -45,14 +49,14 @@ export default function AccountPage() {
       <Card className="max-w-md mx-auto mt-8">
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+            <AvatarImage src={photoURL || ''} alt={displayName || 'User'} />
             <AvatarFallback>
               <UserIcon className="h-8 w-8" />
             </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-2xl">{user.displayName || 'No Name Provided'}</CardTitle>
-            <p className="text-muted-foreground">{user.email}</p>
+            <CardTitle className="text-2xl">{displayName || 'No Name Provided'}</CardTitle>
+            <p className="text-muted-foreground">{firebaseUser.email}</p>
           </div>
         </CardHeader>
         <CardContent>

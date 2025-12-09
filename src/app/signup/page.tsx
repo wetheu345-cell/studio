@@ -1,8 +1,7 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
 import { useAuth, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,8 +73,7 @@ export default function SignupPage() {
         createdAt: serverTimestamp(),
       };
       
-      setDoc(userDocRef, userData)
-        .catch(error => {
+      await setDoc(userDocRef, userData).catch(error => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'create',
@@ -100,28 +98,23 @@ export default function SignupPage() {
     if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-      const userCredential = await signInWithPopup(auth, provider);
-      const newUser = userCredential.user;
+      const result = await signInWithPopup(auth, provider);
+      const { isNewUser } = getAdditionalUserInfo(result) || { isNewUser: false };
       
-      const userDocRef = doc(firestore, 'users', newUser.uid);
-      const userData = {
-        uid: newUser.uid,
-        email: newUser.email,
-        displayName: newUser.displayName,
-        photoURL: newUser.photoURL,
-        role: 'Rider', // Default role for Google Sign-in
-        createdAt: serverTimestamp(),
-      };
+      if (isNewUser) {
+        const newUser = result.user;
+        const userDocRef = doc(firestore, 'users', newUser.uid);
+        const userData = {
+            uid: newUser.uid,
+            email: newUser.email,
+            displayName: newUser.displayName,
+            photoURL: newUser.photoURL,
+            role: 'Rider' as const, // Default role for Google Sign-in
+            createdAt: serverTimestamp(),
+        };
 
-      setDoc(userDocRef, userData, { merge: true })
-        .catch(error => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'create',
-                requestResourceData: userData
-            }));
-        });
-        
+        await setDoc(userDocRef, userData, { merge: true });
+      }
       router.push('/account');
     } catch (err: any) {
       setError(err.message);
@@ -207,4 +200,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -14,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 export default function MessagingPage() {
-  const { user } = useUser();
+  const { firebaseUser, user } = useUser();
   const firestore = useFirestore();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,12 +38,12 @@ export default function MessagingPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firestore || !user || !newMessage.trim()) return;
+    if (!firestore || !firebaseUser || !newMessage.trim()) return;
 
     const messageData = {
       text: newMessage,
-      userId: user.uid,
-      userName: user.displayName || user.email,
+      userId: firebaseUser.uid,
+      userName: user?.displayName || firebaseUser.email,
       timestamp: serverTimestamp(),
     };
 
@@ -70,7 +69,7 @@ export default function MessagingPage() {
       <PageHeader
         title="Team Chat"
         description="Real-time messaging for instructors and managers."
-        className="text-left"
+        className="text-left px-0"
       />
       <Card className="mt-8 flex-1 flex flex-col">
         <CardContent className="pt-6 flex-1 flex flex-col">
@@ -81,7 +80,7 @@ export default function MessagingPage() {
                 key={msg.id}
                 className={cn(
                   'flex items-start gap-3',
-                  msg.userId === user?.uid && 'flex-row-reverse'
+                  msg.userId === firebaseUser?.uid && 'flex-row-reverse'
                 )}
               >
                 <Avatar className="h-8 w-8">
@@ -90,7 +89,7 @@ export default function MessagingPage() {
                 <div
                   className={cn(
                     'rounded-lg px-4 py-2 max-w-sm',
-                    msg.userId === user?.uid
+                    msg.userId === firebaseUser?.uid
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
                   )}

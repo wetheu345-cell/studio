@@ -1,6 +1,5 @@
-
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
@@ -18,9 +17,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Phone } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Availability, Lesson } from '@/lib/types'
-import { format, startOfWeek, isSameDay } from 'date-fns'
+import { format, startOfWeek } from 'date-fns'
 
-export default function BookingSchedulePage() {
+function BookingScheduleContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname();
@@ -64,7 +63,6 @@ export default function BookingSchedulePage() {
         const weekStartDateStr = format(weekStart, 'yyyy-MM-dd');
         const selectedDateStr = format(date, 'yyyy-MM-dd');
         
-        // 1. Fetch instructor's general availability for the week
         const availabilityQuery = query(
           collection(firestore, 'availability'),
           where('instructorId', '==', instructorId),
@@ -90,7 +88,6 @@ export default function BookingSchedulePage() {
             return;
         }
 
-        // 2. Fetch existing lessons for BOTH the instructor and the horse on the selected day to find booked slots
         const selectedDayString = date.toISOString().split('T')[0];
 
         const instructorLessonsQuery = query(
@@ -123,7 +120,6 @@ export default function BookingSchedulePage() {
         processSnapshot(instructorLessonsSnapshot);
         processSnapshot(horseLessonsSnapshot);
 
-        // 3. Filter out booked slots
         const trulyAvailableTimes = allPossibleSlots.filter(slot => !bookedTimes.has(slot));
         
         setAvailableTimes(trulyAvailableTimes);
@@ -152,7 +148,10 @@ export default function BookingSchedulePage() {
     }
     
     if (!user) {
-        const callbackUrl = `${pathname}?${searchParams.toString()}`;
+        const params = new URLSearchParams(searchParams.toString())
+        if (date) params.set('date', date.toISOString())
+        if (time) params.set('time', time)
+        const callbackUrl = `${pathname}?${params.toString()}`;
         router.push(`/login?redirect=${encodeURIComponent(callbackUrl)}`);
         return;
     }
@@ -177,24 +176,26 @@ export default function BookingSchedulePage() {
       status: 'Pending' as 'Pending',
     }
 
-    const collectionRef = collection(firestore, 'lessons');
-    addDoc(collectionRef, lessonData)
-      .then((docRef) => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.set('date', date.toISOString())
-        params.set('time', time)
-        params.set('lessonId', docRef.id)
-        router.push(`/booking/confirm?${params.toString()}`)
-      }).catch(error => {
-         errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: collectionRef.path,
-            operation: 'create',
-            requestResourceData: lessonData
-          })
-        );
-    });
+    try {
+      const collectionRef = collection(firestore, 'lessons');
+      const docRef = await addDoc(collectionRef, lessonData);
+      
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('date', date.toISOString())
+      params.set('time', time)
+      params.set('lessonId', docRef.id)
+      router.push(`/booking/confirm?${params.toString()}`)
+    } catch (error) {
+       const collectionRef = collection(firestore, 'lessons');
+       errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: collectionRef.path,
+          operation: 'create',
+          requestResourceData: lessonData
+        })
+      );
+    }
   }
 
   return (
@@ -252,4 +253,10 @@ export default function BookingSchedulePage() {
   )
 }
 
-    
+export default function BookingSchedulePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingScheduleContent />
+    </Suspense>
+  )
+}

@@ -8,7 +8,7 @@ import type { Horse, Instructor } from '@/lib/types'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Heart as HorseIcon, User, Calendar, Clock } from 'lucide-react'
+import { CheckCircle, Heart, User, Calendar, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function BookingConfirmationContent() {
@@ -24,8 +24,8 @@ function BookingConfirmationContent() {
   const horseRef = useMemo(() => (firestore && horseId) ? doc(firestore, 'horses', horseId) : null, [firestore, horseId]);
   const instructorRef = useMemo(() => (firestore && instructorId) ? doc(firestore, 'instructors', instructorId) : null, [firestore, instructorId]);
   
-  const { data: horse, loading: horseLoading } = useDoc<Horse>(horseRef);
-  const { data: instructor, loading: instructorLoading } = useDoc<Instructor>(instructorRef);
+  const { data: horse, isLoading: horseLoading } = useDoc<Horse>(horseRef);
+  const { data: instructor, isLoading: instructorLoading } = useDoc<Instructor>(instructorRef);
   
   const loading = horseLoading || instructorLoading
 
@@ -58,7 +58,7 @@ function BookingConfirmationContent() {
                   <li className="flex items-center"><Calendar className="mr-3 h-5 w-5 text-accent" /> {lessonDate?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</li>
                   <li className="flex items-center"><Clock className="mr-3 h-5 w-5 text-accent" /> {time}</li>
                   <li className="flex items-center"><CheckCircle className="mr-3 h-5 w-5 text-accent" /> {lessonType} Lesson</li>
-                  {horse && <li className="flex items-center"><HorseIcon className="mr-3 h-5 w-5 text-accent" /> With {horse.name}</li>}
+                  {horse && <li className="flex items-center"><Heart className="mr-3 h-5 w-5 text-accent" /> With {horse.name}</li>}
                   {instructor && <li className="flex items-center"><User className="mr-3 h-5 w-5 text-accent" /> With {instructor.name}</li>}
                 </ul>
             )}

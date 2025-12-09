@@ -1,11 +1,10 @@
-
 export type UserRole = 'Admin' | 'Manager' | 'Instructor' | 'Rider';
 
 export interface User {
   uid: string;
-  email: string;
-  displayName?: string;
-  photoURL?: string;
+  email: string | null;
+  displayName?: string | null;
+  photoURL?: string | null;
   role: UserRole;
   createdAt: any;
 }
@@ -56,15 +55,15 @@ export interface Message {
 }
 
 export interface TimeSlot {
-    date: string; // e.g., "2024-12-09"
-    startTime: string; // e.g., "09:00"
-    endTime: string; // e.g., "11:00"
+    date: string; 
+    startTime: string; 
+    endTime: string; 
 }
 
 export interface Availability {
     id: string;
     instructorId: string;
-    weekStartDate: string; // "2024-12-09"
+    weekStartDate: string;
     timeSlots: TimeSlot[];
 }
 
@@ -72,11 +71,10 @@ export interface MuseumRental {
   id: string;
   userId: string;
   userName: string;
-  email: string;
+  email: string | null;
   date: string;
   time: string;
   guests: number;
   notes?: string;
   status: 'Pending' | 'Confirmed' | 'Cancelled';
 }
-
