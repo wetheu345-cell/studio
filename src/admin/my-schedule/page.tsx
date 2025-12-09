@@ -31,15 +31,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 export default function MySchedulePage() {
-  const { user } = useUser();
+  const { firebaseUser } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [selectedLesson, setSelectedLesson] = useState<(Lesson & { id: string }) | null>(null);
   const [lessonToCancel, setLessonToCancel] = useState<(Lesson & { id: string}) | null>(null);
 
   const instructorsQuery = useMemo(() => 
-    (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
-    [firestore, user]
+    (firestore && firebaseUser ? query(collection(firestore, 'instructors'), where('userId', '==', firebaseUser.uid)) : null),
+    [firestore, firebaseUser]
   );
   const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsQuery);
   const instructor = instructors?.[0];
