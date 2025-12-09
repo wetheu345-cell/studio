@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -14,6 +15,7 @@ import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList } from "lucide-react"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -37,13 +39,14 @@ export function AdminSidebar() {
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                href={item.href}
                 asChild
                 isActive={pathname === item.href}
                 tooltip={{ children: item.label }}
               >
-                <item.icon />
-                <span>{item.label}</span>
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
