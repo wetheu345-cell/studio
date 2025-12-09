@@ -8,14 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HorseCard } from '@/components/horse-card';
 import { InstructorCard } from '@/components/instructor-card';
-import { useCollection } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Horse, Instructor } from '@/lib/types';
-import { collection, getFirestore } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
-  const { data: horses } = useCollection<Horse>(collection(getFirestore(), 'horses'));
-  const { data: instructors } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+  const firestore = useFirestore();
+
+  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+
+  const { data: horses } = useCollection<Horse>(horsesCollection);
+  const { data: instructors } = useCollection<Instructor>(instructorsCollection);
 
 
   return (
@@ -34,7 +40,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
           <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl tracking-wider">
-            Ebony Horse Women
+            EHI
           </h1>
           <p className="mt-4 max-w-2xl text-lg md:text-xl font-body">
             Experience the joy and therapeutic power of horseback riding. Join our community and embark on an unforgettable journey.

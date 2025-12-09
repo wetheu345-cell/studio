@@ -1,13 +1,16 @@
+
 'use client';
 import { HorseCard } from "@/components/horse-card"
 import { PageHeader } from "@/components/page-header"
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { Horse } from "@/lib/types";
-import { collection, getFirestore } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HorsesPage() {
-  const { data: horses, loading } = useCollection<Horse>(collection(getFirestore(), 'horses'));
+  const firestore = useFirestore();
+  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const { data: horses, loading } = useCollection<Horse>(horsesCollection);
 
   return (
     <div className="container py-12 md:py-16">

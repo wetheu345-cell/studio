@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,12 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { Instructor } from "@/lib/types";
-import { collection, getFirestore } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 
 export default function AdminInstructorsPage() {
-  const { data: instructors, loading } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+  const firestore = useFirestore();
+  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const { data: instructors, loading } = useCollection<Instructor>(instructorsCollection);
 
   return (
     <div className="p-4 md:p-8">

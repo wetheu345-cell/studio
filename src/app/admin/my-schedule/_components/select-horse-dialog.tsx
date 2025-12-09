@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo } from 'react';
 import {
@@ -9,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { Horse, Lesson } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,7 +36,7 @@ export function SelectHorseDialog({
     lesson.horseId || null
   );
 
-  const horsesCollection = useMemo(
+  const horsesCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'horses') : null),
     [firestore]
   );

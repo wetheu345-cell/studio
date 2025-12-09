@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -5,12 +6,14 @@ import { PageHeader } from "@/components/page-header"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { Lesson } from "@/lib/types";
-import { collection, getFirestore } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 
 export default function AdminSchedulePage() {
-  const { data: lessons, loading } = useCollection<Lesson>(collection(getFirestore(), 'lessons'));
+  const firestore = useFirestore();
+  const lessonsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
+  const { data: lessons, loading } = useCollection<Lesson>(lessonsCollection);
 
   return (
     <div className="p-4 md:p-8 grid gap-8 md:grid-cols-3">

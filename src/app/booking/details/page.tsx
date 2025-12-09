@@ -1,9 +1,10 @@
+
 'use client'
 import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCollection, useUser, useFirestore } from '@/firebase'
+import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase'
 import { collection } from 'firebase/firestore'
 import type { Horse, Instructor } from '@/lib/types'
 import { PageHeader } from '@/components/page-header'
@@ -32,8 +33,8 @@ export default function BookingDetailsPage() {
   const [selectedHorseId, setSelectedHorseId] = useState<string | undefined>(horseIdParam)
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | undefined>(instructorIdParam)
 
-  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
 
   const { data: horses, loading: horsesLoading } = useCollection<Horse>(horsesCollection);
   const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);

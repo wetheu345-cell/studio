@@ -1,15 +1,21 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Calendar, Heart, Users, DollarSign } from "lucide-react"
-import { useCollection } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { Lesson, Horse, Instructor } from "@/lib/types";
-import { collection, getFirestore } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 
 export default function AdminDashboardPage() {
-  const { data: lessons, loading: lessonsLoading } = useCollection<Lesson>(collection(getFirestore(), 'lessons'));
-  const { data: horses, loading: horsesLoading } = useCollection<Horse>(collection(getFirestore(), 'horses'));
-  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+  const firestore = useFirestore();
+  const lessonsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
+  const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+
+  const { data: lessons, loading: lessonsLoading } = useCollection<Lesson>(lessonsCollection);
+  const { data: horses, loading: horsesLoading } = useCollection<Horse>(horsesCollection);
+  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
 
   const stats = [
     { title: "Total Bookings", value: lessonsLoading ? '...' : lessons?.length, icon: Calendar, color: "text-blue-500" },
