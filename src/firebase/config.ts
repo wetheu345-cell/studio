@@ -1,8 +1,8 @@
 export const firebaseConfig = {
   "projectId": "culture-rally",
-  "appId": "1:691497364708:web:2e7500758ef7e817e390f1",
-  "apiKey": "AIzaSyDDAuysngjnJrx_i-BNWSn7agX65y3YYqk",
+  "appId": "1:115324771386:web:05340ef4768be9c93ae903",
+  "apiKey": "AIzaSyD_Huc9Stfz-VDoiRxSdsh41cdZX7XuffQ",
   "authDomain": "culture-rally.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "691497364708"
+  "measurementId": "G-S0S263JQS3",
+  "messagingSenderId": "115324771386"
 };
