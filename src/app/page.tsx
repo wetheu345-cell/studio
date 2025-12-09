@@ -69,35 +69,35 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none mt-12">
-            <Card className="hover:shadow-lg transition-shadow duration-300">
+          <div className="mx-auto grid max-w-5xl items-stretch gap-8 sm:grid-cols-2 mt-12">
+            <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl tracking-wide">Regular Lessons</CardTitle>
                 <CardDescription>For all skill levels, from beginners to advanced riders.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 flex-grow flex flex-col justify-between">
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-accent"/> Skill development</li>
                   <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-accent"/> Private and group options</li>
                   <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-accent"/> Focus on horsemanship</li>
                 </ul>
-                <Button asChild className="w-full bg-primary text-primary-foreground">
+                <Button asChild className="w-full bg-primary text-primary-foreground mt-4">
                   <Link href="/booking?type=Regular">Book Regular Lesson</Link>
                 </Button>
               </CardContent>
             </Card>
-            <Card className="hover:shadow-lg transition-shadow duration-300">
+            <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl tracking-wide">Therapy Lessons</CardTitle>
                 <CardDescription>Utilizing horses to promote emotional growth and learning.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 flex-grow flex flex-col justify-between">
                 <ul className="space-y-2 text-muted-foreground">
                    <li className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-accent"/> Certified instructors</li>
                    <li className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-accent"/> Safe and supportive environment</li>
                    <li className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-accent"/> Builds confidence and trust</li>
                 </ul>
-                <Button asChild className="w-full bg-accent text-accent-foreground">
+                <Button asChild className="w-full bg-accent text-accent-foreground mt-4">
                   <Link href="/booking?type=Therapy">Book Therapy Session</Link>
                 </Button>
               </CardContent>

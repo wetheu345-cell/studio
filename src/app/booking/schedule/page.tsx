@@ -1,9 +1,9 @@
 
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
-import { useUser, useFirestore, errorEmitter, FirestorePermissionError, useMemoFirebase } from '@/firebase'
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
 import { PageHeader } from '@/components/page-header'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -34,6 +34,19 @@ export default function BookingSchedulePage() {
 
   const instructorId = searchParams.get('instructorId')
   const horseId = searchParams.get('horseId')
+  const lessonType = searchParams.get('type') || 'Regular';
+
+  const generateTimeSlots = (startTime: string, endTime: string, duration: number = 60): string[] => {
+    const slots = [];
+    let current = new Date(`1970-01-01T${startTime}:00`);
+    const end = new Date(`1970-01-01T${endTime}:00`);
+
+    while (current < end) {
+        slots.push(format(current, 'HH:mm'));
+        current.setMinutes(current.getMinutes() + duration);
+    }
+    return slots;
+  };
 
   useEffect(() => {
     const fetchAvailability = async () => {
@@ -65,35 +78,32 @@ export default function BookingSchedulePage() {
         }
 
         const availabilityDoc = availabilitySnapshot.docs[0].data() as Availability;
-        const allSlotsForDay = availabilityDoc.timeSlots
+        const allPossibleSlots = availabilityDoc.timeSlots
           .filter(slot => slot.date === selectedDateStr)
-          .flatMap(slot => {
-              const start = parseInt(slot.startTime.split(':')[0]);
-              const end = parseInt(slot.endTime.split(':')[0]);
-              const times = [];
-              for (let h = start; h < end; h++) {
-                  times.push(`${String(h).padStart(2, '0')}:00`);
-                  times.push(`${String(h).padStart(2, '0')}:30`);
-              }
-               if(slot.endTime.split(':')[1] === '30') {
-                  times.push(`${String(end).padStart(2, '0')}:00`);
-              }
-              return times;
-          })
+          .flatMap(slot => generateTimeSlots(slot.startTime, slot.endTime, 60))
           .sort((a,b) => a.localeCompare(b));
+        
+        if (allPossibleSlots.length === 0) {
+            setAvailableTimes([]);
+            setIsLoadingTimes(false);
+            return;
+        }
 
-        // 2. Fetch existing lessons for the instructor and horse on the selected day
+        // 2. Fetch existing lessons for BOTH the instructor and the horse on the selected day to find booked slots
+        const selectedDayStart = new Date(date.setHours(0,0,0,0)).toISOString();
+        const selectedDayEnd = new Date(date.setHours(23,59,59,999)).toISOString();
+
         const instructorLessonsQuery = query(
           collection(firestore, 'lessons'), 
           where('instructorId', '==', instructorId),
-          where('date', '>=', date.toISOString().split('T')[0]),
-          where('date', '<', new Date(date.getTime() + 86400000).toISOString().split('T')[0])
+          where('date', '>=', selectedDayStart),
+          where('date', '<=', selectedDayEnd)
         );
         const horseLessonsQuery = query(
           collection(firestore, 'lessons'), 
           where('horseId', '==', horseId),
-          where('date', '>=', date.toISOString().split('T')[0]),
-          where('date', '<', new Date(date.getTime() + 86400000).toISOString().split('T')[0])
+          where('date', '>=', selectedDayStart),
+          where('date', '<=', selectedDayEnd)
         );
 
         const [instructorLessonsSnapshot, horseLessonsSnapshot] = await Promise.all([
@@ -103,34 +113,20 @@ export default function BookingSchedulePage() {
         
         const bookedTimes = new Set<string>();
         
-        instructorLessonsSnapshot.forEach(doc => {
-            const lesson = doc.data() as Lesson;
-            if (isSameDay(new Date(lesson.date), date)) {
-                 bookedTimes.add(lesson.time);
-                 // Assuming lessons are 1 hour, block the next slot too
-                 const [hour, minute] = lesson.time.split(':').map(Number);
-                 if (minute === 0) {
-                     bookedTimes.add(`${String(hour).padStart(2, '0')}:30`);
-                 } else {
-                     bookedTimes.add(`${String(hour + 1).padStart(2, '0')}:00`);
-                 }
-            }
-        });
-        horseLessonsSnapshot.forEach(doc => {
-            const lesson = doc.data() as Lesson;
-            if (isSameDay(new Date(lesson.date), date)) {
-                 bookedTimes.add(lesson.time);
-                 const [hour, minute] = lesson.time.split(':').map(Number);
-                 if (minute === 0) {
-                     bookedTimes.add(`${String(hour).padStart(2, '0')}:30`);
-                 } else {
-                     bookedTimes.add(`${String(hour + 1).padStart(2, '0')}:00`);
-                 }
-            }
-        });
+        const processSnapshot = (snapshot: any) => {
+             snapshot.docs.forEach((doc: any) => {
+                const lesson = doc.data() as Lesson;
+                if (lesson.status !== 'Cancelled') {
+                    bookedTimes.add(lesson.time);
+                }
+            });
+        }
+       
+        processSnapshot(instructorLessonsSnapshot);
+        processSnapshot(horseLessonsSnapshot);
 
         // 3. Filter out booked slots
-        const trulyAvailableTimes = allSlotsForDay.filter(slot => !bookedTimes.has(slot));
+        const trulyAvailableTimes = allPossibleSlots.filter(slot => !bookedTimes.has(slot));
         
         setAvailableTimes(trulyAvailableTimes);
 
@@ -158,9 +154,9 @@ export default function BookingSchedulePage() {
     }
 
     const lessonData = {
-      type: searchParams.get('type') || 'Regular',
-      horseId: searchParams.get('horseId'),
-      instructorId: searchParams.get('instructorId'),
+      type: lessonType,
+      horseId,
+      instructorId,
       date: date.toISOString(),
       time,
       userId: user.uid,
@@ -217,7 +213,7 @@ export default function BookingSchedulePage() {
           <h3 className="font-semibold">Available Time Slots for {date ? format(date, 'MMMM do') : '...'}</h3>
           <Select onValueChange={setTime} value={time} disabled={isLoadingTimes || availableTimes.length === 0}>
             <SelectTrigger>
-              <SelectValue placeholder={isLoadingTimes ? "Loading times..." : "Select a time"} />
+              <SelectValue placeholder={isLoadingTimes ? "Loading times..." : (availableTimes.length > 0 ? "Select a time" : "No times available")} />
             </SelectTrigger>
             <SelectContent>
               {availableTimes.length > 0 ? (
@@ -236,7 +232,7 @@ export default function BookingSchedulePage() {
 
        <div className="mt-12 w-full max-w-4xl flex justify-end">
         <Button size="lg" onClick={handleNext} disabled={!date || !time || isUserLoading}>
-          Next: Confirm
+          {isUserLoading ? 'Loading...' : 'Next: Confirm'}
         </Button>
       </div>
     </div>
