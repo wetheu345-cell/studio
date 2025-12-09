@@ -2,37 +2,73 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!auth || !firestore) return;
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/admin');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.role === 'Instructor' || userData.role === 'Manager') {
+          router.push('/admin');
+        } else {
+          router.push('/account');
+        }
+      } else {
+         router.push('/account');
+      }
+
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
-        router.push('/admin');
+        const userCredential = await signInWithPopup(auth, provider);
+        const user = userCredential.user;
+        
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.role === 'Instructor' || userData.role === 'Manager') {
+                router.push('/admin');
+            } else {
+                router.push('/account');
+            }
+        } else {
+            // New Google sign-in user, default to rider and send to account
+            // Or prompt to select a role
+            router.push('/account');
+        }
     } catch (err: any) {
         setError(err.message);
     }

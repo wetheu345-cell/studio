@@ -109,6 +109,23 @@ service cloud.firestore {
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
+    
+    /**
+     * @description Manages user profiles and roles.
+     * @path        /users/{userId}
+     * @allow       (create) Any signed-in user can create their own user profile document.
+     * @allow       (read) A user can read their own profile. Admins can read any profile.
+     * @allow       (update) A user can update their own profile.
+     * @deny        (delete) No one can delete a user profile from the client.
+     * @deny        (list) Listing all users is disallowed to protect user privacy.
+     */
+    match /users/{userId} {
+      allow create: if isOwner(userId);
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if false;
+      allow update: if isExistingOwner(userId);
+      allow delete: if false;
+    }
 
     /**
      * @description Manages admin role documents. This collection should be empty or contain
