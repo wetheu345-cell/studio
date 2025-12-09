@@ -1,4 +1,5 @@
 
+
 export interface Horse {
   id: string;
   name: string;
@@ -35,3 +36,11 @@ export interface Lesson {
 export type HorseFormData = Omit<Horse, 'id' | 'imageUrl' | 'imageHint'> & {
   imageFile?: FileList;
 };
+
+export interface Message {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  timestamp: any;
+}

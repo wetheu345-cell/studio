@@ -190,5 +190,16 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow write: if isStaff() && request.resource.data.instructorId == request.auth.uid;
     }
+    
+    /**
+     * @description Stores messages for the staff chat room.
+     * @path        /team-chat/{messageId}
+     * @allow       (read, create) Only staff members (Instructors, Managers) can read and write messages.
+     * @deny        (update, delete) Messages are immutable.
+     */
+    match /team-chat/{messageId} {
+        allow read, create: if isStaff() || isAdmin();
+        allow update, delete: if false;
+    }
   }
 }

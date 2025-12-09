@@ -72,9 +72,11 @@ export default function AdminDashboardPage() {
                             Join Weekly Staff Meeting
                         </a>
                     </Button>
-                    <Button variant="outline" className="w-full" disabled>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Team Messaging (Coming Soon)
+                     <Button asChild variant="outline" className="w-full">
+                        <Link href="/admin/messaging">
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Team Messaging
+                        </Link>
                     </Button>
                 </CardContent>
                 <CardFooter>
