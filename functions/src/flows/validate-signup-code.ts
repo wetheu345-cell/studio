@@ -3,8 +3,9 @@
  */
 import { ai } from '../genkit';
 import { z } from 'genkit';
-import { fromFlow, onRequest } from 'firebase-functions/v2/genkit';
+import { fromFlow } from '@genkit-ai/firebase-functions';
 import { HttpsOptions } from 'firebase-functions/v2/https';
+
 
 const ValidateCodeInputSchema = z.object({
   registrationCode: z.string().describe('The registration code entered by the user.'),
@@ -25,7 +26,6 @@ export const validateSignupCodeFlow = ai.defineFlow(
   },
   async (input) => {
     // This logic runs on the server, so process.env is secure.
-    // In a real app, you would fetch this from Firebase Secret Manager or environment variables.
     const validCode = process.env.PRIVATE_SIGNUP_CODE || 'EHW_ADMIN2024!';
     const isValid = input.registrationCode === validCode;
     return { isValid };

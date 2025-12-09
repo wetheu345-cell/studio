@@ -9,4 +9,4 @@
  */
 
 // It's recommended to define your flows in separate files to keep this entry point clean.
-export { validateSignupCodeFlow } from './flows/validate-signup-code';
+export { validateSignupCode } from './flows/validate-signup-code';
