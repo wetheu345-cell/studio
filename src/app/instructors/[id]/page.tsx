@@ -1,6 +1,6 @@
 'use client';
 import Image from "next/image"
-import { notFound } from "next/navigation"
+import { notFound, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Star } from "lucide-react"
@@ -10,9 +10,11 @@ import type { Instructor } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 
-export default function InstructorProfilePage({ params }: { params: { id: string } }) {
+export default function InstructorProfilePage() {
+  const params = useParams();
   const firestore = useFirestore();
-  const instructorId = params.id;
+  const instructorId = params.id as string;
+  
   const instructorRef = useMemo(() => firestore ? doc(firestore, 'instructors', instructorId) : null, [firestore, instructorId]);
   const { data: instructor, loading } = useDoc<Instructor>(instructorRef);
 

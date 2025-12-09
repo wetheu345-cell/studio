@@ -1,6 +1,6 @@
 'use client';
 import Image from "next/image"
-import { notFound } from "next/navigation"
+import { notFound, useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -11,9 +11,11 @@ import type { Horse } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 
-export default function HorseProfilePage({ params }: { params: { id: string } }) {
+export default function HorseProfilePage() {
+  const params = useParams();
   const firestore = useFirestore();
-  const horseId = params.id;
+  const horseId = params.id as string;
+
   const horseRef = useMemo(() => firestore ? doc(firestore, 'horses', horseId) : null, [firestore, horseId]);
   const { data: horse, loading } = useDoc<Horse>(horseRef);
 
