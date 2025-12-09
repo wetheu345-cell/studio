@@ -68,6 +68,10 @@
         },
         "imageHint": {
           "type": "string"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The corresponding Firebase Auth user ID."
         }
       },
       "required": ["name", "specialty", "bio", "imageUrl"]
@@ -78,6 +82,9 @@
       "type": "object",
       "properties": {
         "userId": {
+          "type": "string"
+        },
+        "userName": {
           "type": "string"
         },
         "type": {
@@ -102,7 +109,7 @@
           "enum": ["Confirmed", "Pending", "Cancelled"]
         }
       },
-      "required": ["userId", "type", "instructorId", "horseId", "date", "time", "status"]
+      "required": ["userId", "userName", "type", "instructorId", "date", "time", "status"]
     }
   },
   "auth": {
