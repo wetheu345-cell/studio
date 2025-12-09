@@ -43,7 +43,7 @@ export default function BookingSchedulePage() {
   const day = date?.getDay()
   const availableTimes = day === 0 || day === 6 ? weekendSlots : weekDaySlots
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!date || !time || !user || !firestore) {
         toast({
             variant: "destructive",

@@ -96,6 +96,9 @@ export function HorseFormDialog({
 
     let imageUrl = horse?.imageUrl || '';
     let imageHint = horse?.imageHint || 'horse';
+    
+    // Set loading state
+    form.formState.isSubmitting = true;
 
     try {
         if (data.imageFile && data.imageFile.length > 0) {
@@ -120,40 +123,44 @@ export function HorseFormDialog({
             const horseRef = doc(firestore, 'horses', horse.id);
             updateDoc(horseRef, horseData)
                 .then(() => {
-                toast({ title: 'Success', description: 'Horse updated successfully.' });
+                  toast({ title: 'Success', description: 'Horse updated successfully.' });
                 })
                 .catch(error => {
-                errorEmitter.emit(
-                    'permission-error',
-                    new FirestorePermissionError({
-                    path: horseRef.path,
-                    operation: 'update',
-                    requestResourceData: horseData
-                    })
-                );
+                  errorEmitter.emit(
+                      'permission-error',
+                      new FirestorePermissionError({
+                        path: horseRef.path,
+                        operation: 'update',
+                        requestResourceData: horseData
+                      })
+                  );
                 });
         } else {
             const collectionRef = collection(firestore, 'horses');
             addDoc(collectionRef, horseData)
                 .then(() => {
-                toast({ title: 'Success', description: 'Horse added successfully.' });
+                  toast({ title: 'Success', description: 'Horse added successfully.' });
                 })
                 .catch(error => {
-                errorEmitter.emit(
-                    'permission-error',
-                    new FirestorePermissionError({
-                    path: collectionRef.path,
-                    operation: 'create',
-                    requestResourceData: horseData
-                    })
-                );
+                  errorEmitter.emit(
+                      'permission-error',
+                      new FirestorePermissionError({
+                        path: collectionRef.path,
+                        operation: 'create',
+                        requestResourceData: horseData
+                      })
+                  );
                 });
         }
-
+        
         onOpenChange(false);
         form.reset();
+
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Upload Failed', description: e.message });
+    } finally {
+        // Unset loading state
+        form.formState.isSubmitting = false;
     }
   };
 

@@ -84,6 +84,8 @@ export function InstructorFormDialog({
     let imageUrl = instructor?.imageUrl || '';
     let imageHint = instructor?.imageHint || 'person';
 
+    form.formState.isSubmitting = true;
+
     try {
         if (data.imageFile && data.imageFile.length > 0) {
             const file = data.imageFile[0];
@@ -139,6 +141,8 @@ export function InstructorFormDialog({
         form.reset();
     } catch(e: any) {
         toast({ variant: 'destructive', title: 'Upload Failed', description: e.message });
+    } finally {
+        form.formState.isSubmitting = false;
     }
   };
 
