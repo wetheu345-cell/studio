@@ -32,7 +32,7 @@ export interface FirebaseContextState extends AuthState {
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-const useAuthState = (auth: Auth, firestore: Firestore): AuthState => {
+const useAuthStateInternal = (auth: Auth, firestore: Firestore): AuthState => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
@@ -64,7 +64,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
-  const authState = useAuthState(auth, firestore);
+  const authState = useAuthStateInternal(auth, firestore);
 
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
