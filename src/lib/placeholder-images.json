@@ -8,6 +8,20 @@
       "imageHint": "horse riding sunset"
     },
     {
+      "id": "about-1",
+      "name": "Founder with horse",
+      "type": "about",
+      "imageUrl": "https://images.unsplash.com/photo-1599292390038-d6728362a938?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwb3J0cmFpdCUyMG9mJTIwYSUyMHdvbWFuJTIwd2l0aCUyMGElMjBob3JzZXxlbnwwfHx8fDE3NjU0MjQwMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman horse"
+    },
+    {
+      "id": "about-2",
+      "name": "Riding trails in a park",
+      "type": "about",
+      "imageUrl": "https://images.unsplash.com/photo-1519669888431-8941a5d41d41?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxob3JzZSUyMHRyYWlsJTIwcmlkZXxlbnwwfHx8fDE3NjU0MjQwMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "horse trail"
+    },
+    {
       "id": "horse-1",
       "name": "Apollo",
       "breed": "Thoroughbred",

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -20,6 +21,7 @@ export function Header() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/about', label: 'About Us'},
     { href: '/horses', label: 'Horses' },
     { href: '/instructors', label: 'Instructors' },
     ...(user ? [{ href: '/admin', label: 'Admin' }] : []),

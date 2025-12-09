@@ -1,3 +1,4 @@
+
 'use client';
 import { Facebook, Twitter, Instagram, Youtube, Linkedin } from 'lucide-react';
 import { Logo } from '@/components/icons';
@@ -32,6 +33,7 @@ export function Footer() {
             <div className="space-y-2">
                 <h4 className="font-headline text-lg">Quick Links</h4>
                 <ul className="space-y-1">
+                    <li><Link href="/about" className="text-muted-foreground hover:text-primary">About Us</Link></li>
                     <li><Link href="/booking" className="text-muted-foreground hover:text-primary">Booking</Link></li>
                     <li><Link href="/horses" className="text-muted-foreground hover:text-primary">Our Horses</Link></li>
                     <li><Link href="/instructors" className="text-muted-foreground hover:text-primary">Instructors</Link></li>
