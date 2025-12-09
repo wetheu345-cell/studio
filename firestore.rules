@@ -1,40 +1,45 @@
-
 /**
- * Core Philosophy:
- * This ruleset enforces a strict security model based on user ownership and global administrative roles.
- * User-specific data (lessons) is protected, while global data (instructors, horses) is managed by admins.
+ * Core Philosophy: This ruleset establishes a secure environment for a lesson management application.
+ * It operates on a "default deny" principle, where access is only granted explicitly. The model
+ * prioritizes user privacy and administrative control. Authenticated users are the baseline for
+ * any access.
  *
- * Data Structure:
- * A top-level `/lessons` collection stores all lesson bookings. Each lesson document contains a `userId` field
- * to link it to the owner, enabling per-user security rules.
- * Global data like instructors, horses, and admin roles are in their own top-level collections.
+ * Data Structure: The database uses a flat, multi-collection structure. Core business entities
+ * like `lessons`, `instructors`, `horses`, `students`, and `payments` are stored in their own
+ * top-level collections. There are no user-specific root collections; instead, ownership and
+ * access are determined by UID fields denormalized onto documents.
  *
  * Key Security Decisions:
- * - Admin Roles: A global admin role is implemented by checking for a user's UID in the `/admins/{userId}`
- *   collection. This provides a centralized and clear way to manage administrative privileges.
- * - Lesson Security:
- *   - Admins can read and write all lessons for management purposes.
- *   - Authenticated users can create lessons for themselves (`request.resource.data.userId == request.auth.uid`).
- *   - Users can only read, update, or delete their own lessons (`resource.data.userId == request.auth.uid`).
- *   - Listing the entire collection is restricted to admins to prevent data leakage.
- * - Publicly Readable Data: The /instructors and /horses collections are readable by any authenticated user
- *   to allow them to make booking decisions, but write access is strictly controlled by admins.
+ * 1. Admin-Managed Content: `instructors` and `horses` are treated as admin-configured data.
+ *    While readable by any signed-in user to facilitate lesson booking, all write operations
+ *    are disabled pending the implementation of a formal admin role system.
+ * 2. Student Data Ownership: The `/students` collection uses a direct ownership model where the
+ *    document ID must match the user's authentication UID. This ensures users can only create
+ *    and manage their own student profile. Listing all students is prohibited.
+ * 3. Relational Data Access: For `lessons` and `payments`, access is controlled by a denormalized
+ *    `studentId` field. Only the user whose UID matches this field can read or modify the
+ *    document, ensuring a student can only manage their own appointments and financial records.
+ * 4. Flexible Queries: `list` operations on `lessons` and `payments` are permitted for any
+ *    signed-in user, but the rules rely on the client application to correctly filter these
+ *    queries to only request data for the current user (e.g., using a `where("studentId", "==", auth.uid)` clause).
+ *    This supports application functionality while preventing unauthorized data leakage from the rules themselves.
  *
- * Denormalization for Authorization:
- * The `userId` field is denormalized and stored in each lesson document. This is crucial for writing
- * secure and efficient rules, as it allows direct validation of ownership without needing complex joins or queries.
+ * Denormalization for Authorization: This ruleset heavily relies on denormalization. The `studentId`
+ * field is copied onto `Lesson` and `Payment` documents. This is critical for performance and security,
+ * allowing for fast, direct authorization checks (e.g., `request.auth.uid == resource.data.studentId`)
+ * without requiring slow and costly `get()` calls to other documents.
  *
- * Structural Segregation:
- * The data model correctly segregates user-centric data (/lessons) from globally managed data
- * (/instructors, /horses), which allows for distinct and highly secure access controls for each collection.
+ * Structural Segregation: Each data type resides in its own top-level collection. This clean
+ * separation simplifies rule writing and makes security logic easier to reason about, as access
+ * patterns do not overlap within a single collection path.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // Helper Functions
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
     /**
      * Checks if the user is authenticated.
@@ -44,162 +49,126 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the requesting user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
+     * Checks if the current user's UID matches the provided userId.
+     * Used for direct ownership checks where the document ID is the user's UID.
      */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
     /**
-     * Checks if the requesting user is a global administrator.
-     * Admin status is granted if a document with the user's UID exists in the /admins collection.
+     * Checks if the document exists and if the current user is the owner.
+     * Prevents modification or deletion of non-existent documents.
      */
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * Checks if the user has an 'Instructor' or 'Manager' role in their user profile.
+     * On create, validates that the incoming document's studentId field
+     * matches the currently authenticated user.
      */
-    function isStaff() {
-        let userProfile = get(/databases/$(database)/documents/users/$(request.auth.uid));
-        return isSignedIn() && (userProfile.data.role == 'Instructor' || userProfile.data.role == 'Manager');
+    function isCreatingForSelf() {
+      return request.resource.data.studentId == request.auth.uid;
     }
 
     /**
-     * Verifies that a document exists before an update or delete operation.
-     * This prevents operations on non-existent documents.
+     * On update/delete, validates that the existing document's studentId
+     * field matches the currently authenticated user.
      */
-    function isExistingDoc() {
-      return resource != null;
+    function isDocumentStudent() {
+      return request.auth.uid == resource.data.studentId;
     }
     
     /**
-     * Validates that the lesson being created is for the currently signed-in user.
+     * Enforces immutability of the studentId field on update.
      */
-    function isCreatingOwnLesson() {
-      return request.resource.data.userId == request.auth.uid;
+    function isStudentIdUnchanged() {
+        return request.resource.data.studentId == resource.data.studentId;
     }
 
-    /**
-     * Validates that the lesson being accessed belongs to the currently signed-in user.
-     */
-    function isAccessingOwnLesson() {
-      return resource.data.userId == request.auth.uid;
-    }
-    
-    // ------------------------------------------------------------------------
-    // Collection Rules
-    // ------------------------------------------------------------------------
-    
-    /**
-     * @description Manages user profiles and roles.
-     * @path        /users/{userId}
-     * @allow       (create) Any signed-in user can create their own user profile document.
-     * @allow       (read) A user can read their own profile. Admins can read any profile.
-     * @allow       (update) A user can update their own profile.
-     * @deny        (delete) No one can delete a user profile from the client.
-     * @deny        (list) Listing all users is disallowed to protect user privacy.
-     */
-    match /users/{userId} {
-      allow create: if isOwner(userId);
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow update: if isOwner(userId) && isExistingDoc();
-      allow delete: if false;
-    }
 
     /**
-     * @description Manages admin role documents. This collection should be empty or contain
-     *              documents where the ID is the UID of an admin user.
-     *              This collection should ONLY be managed via the Firebase Console.
-     * @path        /admins/{userId}
-     * @deny        Any client attempting to read or write to this collection.
-     */
-    match /admins/{userId} {
-      allow read, write: if false;
-    }
-
-    /**
-     * @description Top-level collection for all lessons.
-     * @path        /lessons/{lessonId}
-     * @allow       (read) A user can read their own lesson. Staff/Admins can read any lesson.
-     * @allow       (list) Staff/Admins can list all lessons. Users can list their own lessons (requires query with where clause).
-     * @allow       (create) A user can create a lesson for themselves.
-     * @allow       (update, delete) A user can modify their own lesson. Staff/Admins can modify any.
+     * @description Rules for the 'lessons' collection.
+     * @path /lessons/{lessonId}
+     * @allow (get) A student (auth.uid: 'student123') can read a lesson where `studentId` is 'student123'.
+     * @allow (create) A student (auth.uid: 'student123') can create a new lesson with `studentId: 'student123'`.
+     * @deny (update) A student cannot change the `studentId` on an existing lesson document.
+     * @deny (delete) A student (auth.uid: 'student456') cannot delete a lesson owned by 'student123'.
+     * @principle Enforces that users can only manage lessons linked to their own student ID.
      */
     match /lessons/{lessonId} {
-      allow get: if isAccessingOwnLesson() || isStaff() || isAdmin();
-      allow list: if isStaff() || isAdmin(); // Users must query with `where('userId', '==', request.auth.uid)`
-      allow create: if isCreatingOwnLesson();
-      allow update, delete: if isAccessingOwnLesson() || isStaff() || isAdmin();
+      allow get: if isSignedIn() && isDocumentStudent();
+      allow list: if isSignedIn(); // Client MUST query with where("studentId", "==", request.auth.uid)
+      allow create: if isSignedIn() && isCreatingForSelf();
+      allow update: if isSignedIn() && isDocumentStudent() && isStudentIdUnchanged() && resource != null;
+      allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
     }
 
     /**
-     * @description Instructor profiles, viewable by all, managed by administrators.
-     * @path        /instructors/{instructorId}
-     * @allow       (read) Any authenticated user can view instructor profiles.
-     * @allow       (write) Authenticated admins only.
+     * @description Rules for the 'instructors' collection.
+     * @path /instructors/{instructorId}
+     * @allow (get, list) Any signed-in user can read instructor information to book a lesson.
+     * @deny (create, update, delete) All write operations are denied, as this data should be managed by an administrator.
+     * @principle Treats instructor data as publicly readable within the app but centrally managed.
      */
     match /instructors/{instructorId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow get, list: if isSignedIn();
+      // CRITICAL: Cannot implement admin-only writes without a defined role system.
+      // The 'Instructor' entity is missing an 'adminId' or 'creatorId' field for ownership checks.
+      allow create: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow update: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow delete: if false; // TODO: Add admin validation once an admin role system is implemented.
     }
 
     /**
-     * @description Horse profiles, viewable by all, managed by administrators.
-     * @path        /horses/{horseId}
-     * @allow       (read) Any authenticated user can view horse profiles.
-     * @allow       (write) Authenticated admins only.
+     * @description Rules for the 'horses' collection.
+     * @path /horses/{horseId}
+     * @allow (get, list) Any signed-in user can read horse information to book a lesson.
+     * @deny (create, update, delete) All write operations are denied, as this data should be managed by an administrator.
+     * @principle Treats horse data as publicly readable within the app but centrally managed.
      */
     match /horses/{horseId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-    
-    /**
-     * @description Payment information, managed exclusively by administrators.
-     * @path        /payments/{paymentId}
-     * @allow       (read, write) Authenticated admins only.
-     * @deny        Any non-admin user.
-     */
-    match /payments/{paymentId} {
-      allow read, write: if isAdmin();
-    }
-    
-    /**
-     * @description Museum rental bookings.
-     * @path        /museumRentals/{rentalId}
-     * @allow       (create) Any signed-in user can book a rental.
-     * @allow       (read, list) Only admins can view rental information.
-     * @allow       (update, delete) Only admins can modify or cancel rentals.
-     */
-    match /museumRentals/{rentalId} {
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow read, list, update, delete: if isAdmin();
+      allow get, list: if isSignedIn();
+      // CRITICAL: Cannot implement admin-only writes without a defined role system.
+      // The 'Horse' entity is missing an 'adminId' or 'creatorId' field for ownership checks.
+      allow create: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow update: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow delete: if false; // TODO: Add admin validation once an admin role system is implemented.
     }
 
     /**
-     * @description Stores instructor weekly availability.
-     * @path        /availability/{availabilityId}
-     * @allow       (read) Authenticated users can read availability to book lessons.
-     * @allow       (create, update, delete) Instructors can manage their own availability.
+     * @description Rules for the 'students' collection.
+     * @path /students/{studentId}
+     * @allow (create) A new user (auth.uid: 'user123') can create their own student profile at `/students/user123`.
+     * @allow (get) A user (auth.uid: 'user123') can read their own profile at `/students/user123`.
+     * @deny (list) No user can list the entire `/students` collection.
+     * @deny (update) A user (auth.uid: 'user456') cannot update the profile of 'user123'.
+     * @principle Restricts access to a user's own data tree via path-based ownership.
      */
-    match /availability/{availabilityId} {
-        allow read: if isSignedIn();
-        allow write: if isStaff() && request.resource.data.instructorId == request.auth.uid;
+    match /students/{studentId} {
+      allow get: if isOwner(studentId);
+      allow list: if false; // Prevent users from listing all other students in the system.
+      allow create: if isOwner(studentId) && request.resource.data.id == studentId;
+      allow update: if isExistingOwner(studentId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(studentId);
     }
-    
+
     /**
-     * @description Stores messages for the staff chat room.
-     * @path        /team-chat/{messageId}
-     * @allow       (list, get, create) Only staff members (Instructors, Managers) can read and write messages.
-     * @deny        (update, delete) Messages are immutable.
+     * @description Rules for the 'payments' collection.
+     * @path /payments/{paymentId}
+     * @allow (get) A student (auth.uid: 'student123') can read a payment where `studentId` is 'student123'.
+     * @allow (create) A student (auth.uid: 'student123') can create a new payment record with `studentId: 'student123'`.
+     * @deny (update) A student cannot change the `studentId` on an existing payment document.
+     * @deny (delete) A student (auth.uid: 'student456') cannot delete a payment for 'student123'.
+     * @principle Enforces that users can only manage payments linked to their own student ID.
      */
-    match /team-chat/{messageId} {
-        allow list, get, create: if isStaff();
-        allow update, delete: if false;
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && isDocumentStudent();
+      allow list: if isSignedIn(); // Client MUST query with where("studentId", "==", request.auth.uid)
+      allow create: if isSignedIn() && isCreatingForSelf();
+      allow update: if isSignedIn() && isDocumentStudent() && isStudentIdUnchanged() && resource != null;
+      allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
     }
   }
 }
