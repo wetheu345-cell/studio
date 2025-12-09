@@ -86,6 +86,18 @@ service cloud.firestore {
     function isStudentIdUnchanged() {
         return request.resource.data.studentId == resource.data.studentId;
     }
+    
+    function isManager() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Manager';
+    }
+
+    function isInstructor() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Instructor';
+    }
+    
+    function isAdmin() {
+        return isManager() || isInstructor();
+    }
 
 
     /**
@@ -98,10 +110,10 @@ service cloud.firestore {
      * @principle Enforces that users can only manage lessons linked to their own student ID.
      */
     match /lessons/{lessonId} {
-      allow get: if isSignedIn() && isDocumentStudent();
+      allow get: if isSignedIn() && (isDocumentStudent() || isAdmin());
       allow list: if isSignedIn(); // Client MUST query with where("studentId", "==", request.auth.uid)
       allow create: if isSignedIn() && isCreatingForSelf();
-      allow update: if isSignedIn() && isDocumentStudent() && isStudentIdUnchanged() && resource != null;
+      allow update: if isSignedIn() && (isDocumentStudent() || isAdmin()) && isStudentIdUnchanged() && resource != null;
       allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
     }
 
@@ -114,11 +126,7 @@ service cloud.firestore {
      */
     match /instructors/{instructorId} {
       allow get, list: if isSignedIn();
-      // CRITICAL: Cannot implement admin-only writes without a defined role system.
-      // The 'Instructor' entity is missing an 'adminId' or 'creatorId' field for ownership checks.
-      allow create: if false; // TODO: Add admin validation once an admin role system is implemented.
-      allow update: if false; // TODO: Add admin validation once an admin role system is implemented.
-      allow delete: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow create, update, delete: if isManager();
     }
 
     /**
@@ -130,11 +138,7 @@ service cloud.firestore {
      */
     match /horses/{horseId} {
       allow get, list: if isSignedIn();
-      // CRITICAL: Cannot implement admin-only writes without a defined role system.
-      // The 'Horse' entity is missing an 'adminId' or 'creatorId' field for ownership checks.
-      allow create: if false; // TODO: Add admin validation once an admin role system is implemented.
-      allow update: if false; // TODO: Add admin validation once an admin role system is implemented.
-      allow delete: if false; // TODO: Add admin validation once an admin role system is implemented.
+      allow create, update, delete: if isManager();
     }
 
     /**
@@ -169,6 +173,25 @@ service cloud.firestore {
       allow create: if isSignedIn() && isCreatingForSelf();
       allow update: if isSignedIn() && isDocumentStudent() && isStudentIdUnchanged() && resource != null;
       allow delete: if isSignedIn() && isDocumentStudent() && resource != null;
+    }
+    
+    match /team-chat/{messageId} {
+        allow read, write: if isAdmin();
+    }
+
+    match /availability/{availabilityId} {
+        allow read, write: if isAdmin();
+    }
+    
+    match /users/{userId} {
+        allow read: if isSignedIn();
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+    }
+
+    match /museumRentals/{rentalId} {
+        allow create: if isSignedIn();
+        allow read, list, update: if isManager();
     }
   }
 }

@@ -62,7 +62,6 @@ export interface MuseumRental {
   userId: string;
   userName: string;
   email: string;
-  phone: string;
   date: string;
   time: string;
   guests: number;
