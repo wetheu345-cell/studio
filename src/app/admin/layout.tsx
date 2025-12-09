@@ -19,50 +19,73 @@ export default function AdminLayout({
   const firestore = useFirestore();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [authCheckCompleted, setAuthCheckCompleted] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    // Wait until the initial user loading is finished
+    if (isUserLoading) {
+      return;
+    }
 
+    // If no user is logged in, redirect to login page
     if (!user) {
       router.push('/login');
       return;
     }
-
+    
+    // If user is logged in, check their role from Firestore
     if (firestore) {
       const userDocRef = doc(firestore, 'users', user.uid);
       getDoc(userDocRef).then(userDoc => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          // Check if user has an authorized role
           if (userData.role === 'Instructor' || userData.role === 'Manager') {
             setIsAuthorized(true);
           } else {
-            router.push('/account'); // Redirect non-admins
+            // If role is not authorized, redirect to their account page
+            router.push('/account');
           }
         } else {
-            router.push('/account'); // Redirect if user doc doesn't exist
+          // If no user document exists, they are not an admin
+            router.push('/account'); 
         }
-        setLoading(false);
+        // Mark the authorization check as complete
+        setAuthCheckCompleted(true);
+      }).catch(() => {
+        // On error fetching doc, treat as unauthorized and redirect
+        router.push('/account');
+        setAuthCheckCompleted(true);
       });
     }
   }, [user, isUserLoading, firestore, router]);
 
-  return (
-    <SidebarProvider>
-      <FirebaseErrorListener />
-      <AdminSidebar />
-      <SidebarInset>
-        <AdminHeader />
-        {loading || !isAuthorized ? (
-          <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
+  // Show a loading indicator while checking auth status
+  const isLoading = isUserLoading || !authCheckCompleted;
+  if (isLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
             <div className="animate-pulse">
-              <Logo className="h-12 w-auto text-muted-foreground" />
+                <Logo className="h-12 w-auto text-muted-foreground" />
             </div>
-          </div>
-        ) : (
-          children
-        )}
-      </SidebarInset>
-    </SidebarProvider>
-  );
+        </div>
+    );
+  }
+
+  // If authorized, render the admin layout
+  if (isAuthorized) {
+    return (
+      <SidebarProvider>
+        <FirebaseErrorListener />
+        <AdminSidebar />
+        <SidebarInset>
+          <AdminHeader />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
+
+  // Render nothing (or a fallback) while redirecting for unauthorized users
+  return null;
 }
