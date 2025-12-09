@@ -14,14 +14,14 @@ export default function AvailabilityPage() {
         className="text-left"
       />
 
-      <div className="mt-8 grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-            <Card>
+      <div className="mt-8 grid md:grid-cols-2 gap-8 items-start">
+        <div className="flex justify-center">
+            <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Week View</CardTitle>
                     <CardDescription>Select a day to manage your time slots.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex justify-center">
                     <Calendar
                         mode="single"
                         selected={new Date()}
@@ -30,7 +30,7 @@ export default function AvailabilityPage() {
                 </CardContent>
             </Card>
         </div>
-        <div className="md:col-span-1">
+        <div>
             <Card>
                  <CardHeader>
                     <CardTitle>Manage Time Slots</CardTitle>
