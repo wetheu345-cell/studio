@@ -13,8 +13,8 @@ export async function validateSignupCode(
 ): Promise<{ isValid: boolean }> {
 
     // In a real app, you would get this from your deployed function's trigger URL.
-    // The project ID 'ehibackend' should be part of this URL.
-    const functionUrl = `https://validatesignupcode-4k3p25aiea-uc.a.run.app`;
+    // The project ID 'culture-rally' should be part of this URL.
+    const functionUrl = `https://validatesignupcode-z4b2q1aiea-uc.a.run.app`;
     
     try {
         const response = await fetch(functionUrl, {

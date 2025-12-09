@@ -14,7 +14,7 @@ if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
 try {
   admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_ADMIN_PRIVATE_KEY)),
-    projectId: 'ehibackend',
+    projectId: 'culture-rally',
   });
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error.message);

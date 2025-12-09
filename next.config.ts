@@ -27,13 +27,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/v0/b/ehibackend.appspot.com/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
-        port: '',
-        pathname: '/v0/b/ehibackend.firebasestorage.app/**',
+        pathname: '/v0/b/culture-rally.appspot.com/**',
       },
       {
         protocol: 'https',
