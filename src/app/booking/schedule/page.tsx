@@ -1,7 +1,7 @@
 
 'use client'
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
 import { PageHeader } from '@/components/page-header'
@@ -23,6 +23,7 @@ import { format, startOfWeek, isSameDay } from 'date-fns'
 export default function BookingSchedulePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname();
   const { user, isUserLoading } = useUser()
   const firestore = useFirestore()
   const { toast } = useToast()
@@ -90,20 +91,17 @@ export default function BookingSchedulePage() {
         }
 
         // 2. Fetch existing lessons for BOTH the instructor and the horse on the selected day to find booked slots
-        const selectedDayStart = new Date(date.setHours(0,0,0,0)).toISOString();
-        const selectedDayEnd = new Date(date.setHours(23,59,59,999)).toISOString();
+        const selectedDayString = date.toISOString().split('T')[0];
 
         const instructorLessonsQuery = query(
           collection(firestore, 'lessons'), 
           where('instructorId', '==', instructorId),
-          where('date', '>=', selectedDayStart),
-          where('date', '<=', selectedDayEnd)
+          where('date', '==', selectedDayString)
         );
         const horseLessonsQuery = query(
           collection(firestore, 'lessons'), 
           where('horseId', '==', horseId),
-          where('date', '>=', selectedDayStart),
-          where('date', '<=', selectedDayEnd)
+          where('date', '==', selectedDayString)
         );
 
         const [instructorLessonsSnapshot, horseLessonsSnapshot] = await Promise.all([
@@ -144,20 +142,35 @@ export default function BookingSchedulePage() {
 
 
   const handleNext = async () => {
-    if (!date || !time || !user || !firestore) {
+    if (!date || !time) {
         toast({
             variant: "destructive",
             title: "Missing Information",
-            description: "Please select a date and time, and make sure you are logged in.",
+            description: "Please select a date and time.",
         })
       return
+    }
+    
+    if (!user) {
+        const callbackUrl = `${pathname}?${searchParams.toString()}`;
+        router.push(`/login?redirect=${encodeURIComponent(callbackUrl)}`);
+        return;
+    }
+
+    if (!firestore) {
+         toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not connect to the database.",
+        })
+        return;
     }
 
     const lessonData = {
       type: lessonType,
       horseId,
       instructorId,
-      date: date.toISOString(),
+      date: format(date, 'yyyy-MM-dd'),
       time,
       userId: user.uid,
       userName: user.displayName || user.email || 'Unknown User',
@@ -238,3 +251,5 @@ export default function BookingSchedulePage() {
     </div>
   )
 }
+
+    

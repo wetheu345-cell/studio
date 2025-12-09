@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -19,15 +19,27 @@ export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isUserLoading } = useUser();
 
+  const redirectUrl = searchParams.get('redirect');
+
   useEffect(() => {
-    if (!isUserLoading && user && firestore) {
+    if (isUserLoading || !user) {
+      return;
+    }
+
+    if (redirectUrl) {
+        router.push(redirectUrl);
+        return;
+    }
+
+    if (firestore) {
       const userDocRef = doc(firestore, 'users', user.uid);
       getDoc(userDocRef).then(userDoc => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          if (userData.role === 'Instructor' || userData.role === 'Manager') {
+          if (userData.role === 'Instructor' || userData.role === 'Manager' || userData.role === 'Admin') {
             router.push('/admin');
           } else {
             router.push('/account');
@@ -37,7 +49,7 @@ export default function LoginPage() {
         }
       });
     }
-  }, [user, isUserLoading, firestore, router]);
+  }, [user, isUserLoading, firestore, router, redirectUrl]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,3 +130,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
