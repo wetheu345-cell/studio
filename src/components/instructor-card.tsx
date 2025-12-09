@@ -18,7 +18,6 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
             alt={instructor.name}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             data-ai-hint={instructor.imageHint}
           />
         </div>

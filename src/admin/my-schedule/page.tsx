@@ -53,7 +53,7 @@ export default function MySchedulePage() {
   const loading = instructorsLoading || lessonsLoading;
 
   const isCancelable = (lesson: Lesson) => {
-    const lessonDateTime = new Date(`${lesson.date.split('T')[0]}T${lesson.time}:00`);
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.time}`);
     return isAfter(lessonDateTime, addHours(new Date(), 24));
   }
 
@@ -81,7 +81,7 @@ export default function MySchedulePage() {
 
   return (
     <div className="p-4 md:p-8">
-      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." className="text-left px-0" />
+      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." />
 
       <Card className="mt-8">
         <CardContent className="pt-6">
