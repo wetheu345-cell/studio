@@ -23,7 +23,7 @@ function BookingScheduleContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname();
-  const { user, isUserLoading } = useUser()
+  const { user, firebaseUser, isUserLoading } = useUser()
   const firestore = useFirestore()
   const { toast } = useToast()
 
@@ -147,7 +147,7 @@ function BookingScheduleContent() {
       return
     }
     
-    if (!user) {
+    if (!firebaseUser) {
         const params = new URLSearchParams(searchParams.toString())
         if (date) params.set('date', date.toISOString())
         if (time) params.set('time', time)
@@ -171,8 +171,8 @@ function BookingScheduleContent() {
       instructorId,
       date: format(date, 'yyyy-MM-dd'),
       time,
-      userId: user.uid,
-      userName: user.displayName || user.email || 'Unknown User',
+      userId: firebaseUser.uid,
+      userName: user?.displayName || firebaseUser.displayName || firebaseUser.email || 'Unknown User',
       status: 'Pending' as 'Pending',
     }
 

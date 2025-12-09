@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 export default function MessagingPage() {
-  const { firebaseUser, user } = useUser();
+  const { user, firebaseUser } = useUser();
   const firestore = useFirestore();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,7 @@ export default function MessagingPage() {
     const messageData = {
       text: newMessage,
       userId: firebaseUser.uid,
-      userName: user?.displayName || firebaseUser.email,
+      userName: user?.displayName || firebaseUser.displayName || firebaseUser.email,
       timestamp: serverTimestamp(),
     };
 

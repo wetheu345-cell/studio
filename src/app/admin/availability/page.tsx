@@ -71,33 +71,45 @@ export default function AvailabilityPage() {
     };
     
     try {
+        let availabilityDocRef;
+        let newTimeSlots;
+        let operation: 'create' | 'update' = 'create';
+        let existingDocId: string | undefined = undefined;
+
+        // Check if an availability document for this week already exists
         const weekStartDateStr = format(weekStart, 'yyyy-MM-dd');
         const q = query(collection(firestore, 'availability'), where('instructorId', '==', instructor.id), where('weekStartDate', '==', weekStartDateStr));
         const existingDocs = await getDocs(q);
 
-        let availabilityData;
-        
         if (existingDocs.docs.length > 0) {
             const existingDoc = existingDocs.docs[0];
+            existingDocId = existingDoc.id;
             const existingData = existingDoc.data() as Availability;
-            const newTimeSlots = [...existingData.timeSlots, newSlot];
-            availabilityData = { timeSlots: newTimeSlots };
-            
-            const availabilityDocRef = doc(firestore, 'availability', existingDoc.id);
-            await updateDoc(availabilityDocRef, availabilityData);
+            newTimeSlots = [...existingData.timeSlots, newSlot];
+            operation = 'update';
         } else {
-            availabilityData = {
-                instructorId: instructor.id,
-                weekStartDate: weekStartDateStr,
-                timeSlots: [newSlot]
-            };
-            await addDoc(collection(firestore, 'availability'), availabilityData);
+            newTimeSlots = [newSlot];
+        }
+
+        const availabilityData = {
+            instructorId: instructor.id,
+            weekStartDate: weekStartDateStr,
+            timeSlots: newTimeSlots
+        };
+
+        if (operation === 'update' && existingDocId) {
+            availabilityDocRef = doc(firestore, 'availability', existingDocId);
+            await updateDoc(availabilityDocRef, { timeSlots: newTimeSlots });
+        } else {
+            const collectionRef = collection(firestore, 'availability');
+            await addDoc(collectionRef, availabilityData);
         }
 
         toast({ title: 'Success', description: 'Availability updated.' });
         setStartTime('');
         setEndTime('');
     } catch (error) {
+        console.error("Error adding time slot:", error);
         errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'availability', operation: 'write', requestResourceData: newSlot }));
     }
   };

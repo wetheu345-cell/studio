@@ -52,21 +52,21 @@ export default function MySchedulePage() {
   const loading = instructorsLoading || lessonsLoading;
 
   const isCancelable = (lesson: Lesson) => {
-    const lessonDateTime = new Date(`${lesson.date}T${lesson.time}:00`);
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.time}`);
     return isAfter(lessonDateTime, addHours(new Date(), 24));
   }
 
-  const handleCancelLesson = async () => {
+  const handleCancelLesson = () => {
     if (!firestore || !lessonToCancel) return;
 
     const lessonRef = doc(firestore, 'lessons', lessonToCancel.id);
     const lessonUpdate = { status: 'Cancelled' as const };
-    
-    try {
-      await updateDoc(lessonRef, lessonUpdate)
-      toast({ title: "Lesson Cancelled", description: "The lesson has been successfully cancelled." });
-      setLessonToCancel(null);
-    } catch (error) {
+    updateDoc(lessonRef, lessonUpdate)
+      .then(() => {
+        toast({ title: "Lesson Cancelled", description: "The lesson has been successfully cancelled." });
+        setLessonToCancel(null);
+      })
+      .catch(error => {
         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
@@ -75,7 +75,7 @@ export default function MySchedulePage() {
             requestResourceData: lessonUpdate,
           })
         );
-    }
+      });
   }
 
   return (
