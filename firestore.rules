@@ -1,7 +1,7 @@
 /**
  * Core Philosophy: This ruleset enforces a strict customer-ownership security model for a lesson scheduling application.
  * A user's identity (auth.uid) is directly tied to their customer profile ID. All related data, such as lessons
- * and payments, must be explicitly associated with this customer ID to be accessible.
+ * and payments, must be explicitly associated with this customer ID to be accessible. A single manager has elevated privileges.
  *
  * Data Structure: The data is organized into flat, top-level collections (customers, lessons, etc.). Authorization
  * is not based on nested paths but on an ownership field (e.g., `customerId`) denormalized directly onto each
@@ -12,9 +12,9 @@
  *   within the system until they have created this customer profile.
  * - Ownership via Denormalization: Access to related documents like `/lessons` and `/payments` is controlled by a
  *   `customerId` field within those documents. Rules are written with the strict requirement that this field exists.
+ * - Manager Role: A single user with the email 'wetheu345@gmail.com' has manager privileges for writing to core data collections.
  * - Public Read-Only Data: Core business data like `/instructors` and `/horses` is publicly readable by anyone
- *   to facilitate browsing and scheduling. All write operations are disabled, as these are assumed to be managed
- *   by an administrative process not covered by these rules.
+ *   to facilitate browsing and scheduling. Write operations are restricted to the manager.
  * - No User Listing: To protect user privacy, it is not possible to list all documents in the `/customers` collection.
  */
 rules_version = '2';
@@ -74,6 +74,13 @@ service cloud.firestore {
         return request.resource.data.customerId == resource.data.customerId;
     }
 
+    /**
+     * Returns true if the user is the designated manager.
+     */
+    function isManager() {
+      return request.auth.token.email == 'wetheu345@gmail.com';
+    }
+
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
@@ -127,24 +134,24 @@ service cloud.firestore {
      * @description Stores instructor profiles. This data is considered public and read-only for clients.
      * @path /instructors/{instructorId}
      * @allow (get, list) Any user, authenticated or not, reading instructor profiles.
-     * @deny (write) Any client attempting to create, update, or delete instructor profiles.
-     * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
+     * @deny (write) Any client attempting to create, update, or delete instructor profiles unless they are the manager.
+     * @principle Secures data as a public, read-only resource, with writes restricted to the manager.
      */
     match /instructors/{instructorId} {
       allow get, list: if true;
-      allow write: if false;
+      allow write: if isManager();
     }
 
     /**
      * @description Stores horse profiles. This data is considered public and read-only for clients.
      * @path /horses/{horseId}
      * @allow (get, list) Any user, authenticated or not, can list all available horses.
-     * @deny (write) Any client attempting to modify a horse's details.
-     * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
+     * @deny (write) Any client attempting to modify a horse's details unless they are the manager.
+     * @principle Secures data as a public, read-only resource, with writes restricted to the manager.
      */
     match /horses/{horseId} {
       allow get, list: if true;
-      allow write: if false;
+      allow write: if isManager();
     }
   }
 }

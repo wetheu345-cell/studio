@@ -14,7 +14,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { validateSignupCode } from '@/ai/flows/validate-signup-code';
 
-type UserRole = 'Rider' | 'Instructor' | 'Manager';
+type UserRole = 'Rider' | 'Instructor';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -44,7 +44,7 @@ export default function SignupPage() {
       return;
     }
 
-    if (role === 'Instructor' || role === 'Manager') {
+    if (role === 'Instructor') {
         const { isValid } = await validateSignupCode(registrationCode);
         if (!isValid) {
             setError('Invalid registration code.');
@@ -68,7 +68,7 @@ export default function SignupPage() {
       
       await setDoc(userDocRef, userData);
 
-      if (role === 'Instructor' || role === 'Manager') {
+      if (role === 'Instructor') {
         router.push('/admin');
       } else {
         router.push('/account');
@@ -153,11 +153,10 @@ export default function SignupPage() {
                 <SelectContent>
                   <SelectItem value="Rider">Rider</SelectItem>
                   <SelectItem value="Instructor">Instructor</SelectItem>
-                  <SelectItem value="Manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {(role === 'Instructor' || role === 'Manager') && (
+            {role === 'Instructor' && (
                 <div className="grid gap-2">
                     <Label htmlFor="registrationCode">Registration Code</Label>
                     <Input id="registrationCode" type="text" placeholder="Enter admin-provided code" required value={registrationCode} onChange={(e) => setRegistrationCode(e.target.value)} />
