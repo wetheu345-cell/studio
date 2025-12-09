@@ -133,9 +133,7 @@ service cloud.firestore {
     match /instructors/{instructorId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if false;
     }
 
     /**
@@ -148,9 +146,7 @@ service cloud.firestore {
     match /horses/{horseId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if false;
     }
   }
 }
