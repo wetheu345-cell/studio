@@ -12,21 +12,16 @@ let firestore: Firestore;
 function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore } {
   if (!getApps().length) {
     firebaseApp = initializeApp(firebaseConfig);
-    auth = getAuth(firebaseApp);
-    firestore = getFirestore(firebaseApp);
   } else {
     firebaseApp = getApp();
-    auth = getAuth(firebaseApp);
-    firestore = getFirestore(firebaseApp);
   }
+  auth = getAuth(firebaseApp);
+  firestore = getFirestore(firebaseApp);
+  
   return { firebaseApp, auth, firestore };
 }
 
-// Initialize on first import
-initializeFirebase();
-
-
-export { initializeFirebase, firebaseApp, auth, firestore };
+export { initializeFirebase };
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
