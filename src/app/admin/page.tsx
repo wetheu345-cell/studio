@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
-import { Calendar, Horse, Users, DollarSign } from "lucide-react"
+import { Calendar, Heart, Users, DollarSign } from "lucide-react"
 import { lessons, horses, instructors } from "@/lib/data"
 
 export default function AdminDashboardPage() {
   const stats = [
     { title: "Total Bookings", value: lessons.length, icon: Calendar, color: "text-blue-500" },
     { title: "Revenue (Today)", value: "$450", icon: DollarSign, color: "text-green-500" },
-    { title: "Available Horses", value: horses.length, icon: Horse, color: "text-orange-500" },
+    { title: "Available Horses", value: horses.length, icon: Heart, color: "text-orange-500" },
     { title: "Active Instructors", value: instructors.length, icon: Users, color: "text-purple-500" },
   ]
 
