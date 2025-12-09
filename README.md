@@ -1,5 +1,9 @@
-# Firebase Studio
+# EHW Lessons
 
-This is a NextJS starter in Firebase Studio.
+This is a Next.js application for Ebony Horse Women to manage and schedule horse riding lessons.
 
-To get started, take a look at src/app/page.tsx.
+To get started, run the development server:
+
+```bash
+npm run dev
+```
