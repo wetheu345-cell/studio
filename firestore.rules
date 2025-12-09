@@ -30,8 +30,7 @@ service cloud.firestore {
     }
 
     function isRider() {
-      let userRole = getRole(request.auth.uid);
-      return isSignedIn() && (userRole == 'Rider' || isInstructor());
+      return isSignedIn(); // Any authenticated user can be a rider.
     }
 
     // COLLECTION RULES
@@ -44,6 +43,7 @@ service cloud.firestore {
       allow create: if (isAdmin() || (isOwner(userId) && request.resource.data.role == 'Rider'));
       // Only Admins can change roles. Users can update their own profile.
       allow update: if (isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role));
+      allow delete: if isAdmin();
     }
     
     // Customers: Logged-in users can manage their own customer document. Managers can see all.
@@ -70,11 +70,11 @@ service cloud.firestore {
     // Instructors can view/update lessons assigned to them.
     // Managers can manage all lessons.
     match /lessons/{lessonId} {
-      allow get: if (isRider() && isOwner(resource.data.userId)) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
+      allow get: if (isRider() && resource.data.userId == request.auth.uid) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
       allow list: if isInstructor(); // Instructors and Managers can list lessons.
-      allow create: if isRider() && isOwner(request.resource.data.userId);
-      allow update: if (isRider() && isOwner(resource.data.userId)) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
-      allow delete: if isManager();
+      allow create: if isRider() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isRider() && resource.data.userId == request.auth.uid) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
+      allow delete: if isManager() || (isRider() && resource.data.userId == request.auth.uid);
     }
 
     // Availability: 
@@ -92,7 +92,7 @@ service cloud.firestore {
     // Managers can view and manage all rentals.
     match /museumRentals/{rentalId} {
         allow get, list: if isManager();
-        allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
         allow update, delete: if isManager();
     }
     

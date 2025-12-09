@@ -6,7 +6,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { useUser as useAppUser, type AuthState } from './auth/use-user';
+import { useUser as useAppUserHook, type AuthState } from './auth/use-user'; // Renamed import
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -30,7 +30,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
-  const authState = useAppUser(auth, firestore);
+  // The useUser hook is called with auth and firestore instances directly.
+  const authState = useAppUserHook(auth, firestore);
 
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
@@ -51,6 +52,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
+// This hook remains the same, but it now consumes the corrected context value.
 export const useFirebase = (): Omit<FirebaseContextState, 'areServicesAvailable'> => {
   const context = useContext(FirebaseContext);
 

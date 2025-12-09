@@ -26,13 +26,16 @@ export default function AdminLayout({
       return;
     }
     
+    // Check if the user's role allows access to the admin dashboard
     if (user.role === 'Instructor' || user.role === 'Manager' || user.role === 'Admin') {
         setIsAuthorized(true);
     } else {
+        // If the user is not an admin, instructor, or manager, redirect them.
         router.push('/account');
     }
   }, [user, isUserLoading, router]);
 
+  // While checking for authorization, show a loading state.
   if (isUserLoading || !isAuthorized) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -43,6 +46,7 @@ export default function AdminLayout({
     );
   }
   
+  // If authorized, render the admin layout.
   return (
     <SidebarProvider>
       <AdminSidebar />
