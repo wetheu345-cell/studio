@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
-import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList } from "lucide-react"
+import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList, Clock } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 
@@ -23,6 +23,7 @@ export function AdminSidebar() {
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/schedule", label: "Full Schedule", icon: Calendar },
     { href: "/admin/my-schedule", label: "My Schedule", icon: ClipboardList },
+    { href: "/admin/availability", label: "Availability", icon: Clock },
     { href: "/admin/horses", label: "Horses", icon: Heart },
     { href: "/admin/instructors", label: "Instructors", icon: Users },
   ]
@@ -38,16 +39,18 @@ export function AdminSidebar() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={{ children: item.label }}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
+              <Link href={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                  tooltip={{ children: item.label }}
+                >
+                  
+                    <item.icon />
+                    <span>{item.label}</span>
+                  
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

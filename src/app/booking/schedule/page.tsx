@@ -1,8 +1,9 @@
+
 'use client'
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { useUser, useFirestore } from '@/firebase'
+import { addDoc, collection } from 'firebase/firestore'
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
 import { PageHeader } from '@/components/page-header'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -32,7 +33,7 @@ const weekendSlots = generateTimeSlots(10, 15); // 10am to 3pm (15:00)
 export default function BookingSchedulePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: userLoading } = useUser()
+  const { user, isUserLoading } = useUser()
   const firestore = useFirestore()
   const { toast } = useToast()
 
@@ -43,7 +44,7 @@ export default function BookingSchedulePage() {
   const availableTimes = day === 0 || day === 6 ? weekendSlots : weekDaySlots
 
   const handleNext = async () => {
-    if (!date || !time || !user) {
+    if (!date || !time || !user || !firestore) {
         toast({
             variant: "destructive",
             title: "Missing Information",
@@ -63,21 +64,25 @@ export default function BookingSchedulePage() {
       status: 'Pending',
     }
 
-    try {
-        const docRef = await addDoc(collection(firestore, 'lessons'), lessonData);
+    const collectionRef = collection(firestore, 'lessons');
+    addDoc(collectionRef, lessonData)
+      .then(docRef => {
         const params = new URLSearchParams(searchParams.toString())
         params.set('date', date.toISOString())
         params.set('time', time)
         params.set('lessonId', docRef.id)
         router.push(`/booking/confirm?${params.toString()}`)
-    } catch(error) {
-        console.error("Error creating lesson:", error)
-        toast({
-            variant: "destructive",
-            title: "Booking Failed",
-            description: "Could not save your lesson. Please try again.",
-        })
-    }
+      })
+      .catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: collectionRef.path,
+            operation: 'create',
+            requestResourceData: lessonData
+          })
+        );
+      });
   }
 
   return (
@@ -124,7 +129,7 @@ export default function BookingSchedulePage() {
       </div>
 
        <div className="mt-12 w-full max-w-4xl flex justify-end">
-        <Button size="lg" onClick={handleNext} disabled={!date || !time || userLoading}>
+        <Button size="lg" onClick={handleNext} disabled={!date || !time || isUserLoading}>
           Next: Confirm
         </Button>
       </div>

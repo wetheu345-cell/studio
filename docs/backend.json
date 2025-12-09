@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -235,6 +236,46 @@
         "paymentMethod",
         "transactionId"
       ]
+    },
+    "Availability": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Availability",
+        "type": "object",
+        "description": "Represents an instructor's availability for a specific week.",
+        "properties": {
+            "instructorId": {
+                "type": "string",
+                "description": "The ID of the instructor this availability belongs to."
+            },
+            "weekStartDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The starting date of the week for this availability record (e.g., '2024-12-09')."
+            },
+            "timeSlots": {
+                "type": "array",
+                "description": "A list of time slots the instructor is available for.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "date": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "startTime": {
+                            "type": "string",
+                            "format": "time"
+                        },
+                        "endTime": {
+                            "type": "string",
+                            "format": "time"
+                        }
+                    },
+                    "required": ["date", "startTime", "endTime"]
+                }
+            }
+        },
+        "required": ["instructorId", "weekStartDate", "timeSlots"]
     }
   },
   "auth": {
@@ -315,6 +356,22 @@
             {
               "name": "paymentId",
               "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/availability/{availabilityId}",
+        "definition": {
+          "entityName": "Availability",
+          "schema": {
+            "$ref": "#/backend/entities/Availability"
+          },
+          "description": "Stores instructor weekly availability. Instructors can manage their own.",
+          "params": [
+            {
+              "name": "availabilityId",
+              "description": "The unique identifier for an availability document."
             }
           ]
         }

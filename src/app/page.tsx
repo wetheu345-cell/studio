@@ -11,7 +11,6 @@ import { InstructorCard } from '@/components/instructor-card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Horse, Instructor } from '@/lib/types';
 import { collection } from 'firebase/firestore';
-import { useMemo } from 'react';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');

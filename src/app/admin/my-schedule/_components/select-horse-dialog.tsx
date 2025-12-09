@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { Horse, Lesson } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,7 +40,7 @@ export function SelectHorseDialog({
     () => (firestore ? collection(firestore, 'horses') : null),
     [firestore]
   );
-  const { data: horses, loading } = useCollection<Horse>(horsesCollection);
+  const { data: horses, isLoading } = useCollection<Horse>(horsesCollection);
 
   const availableHorses = useMemo(() => {
     if (!horses) return [];
@@ -50,28 +50,33 @@ export function SelectHorseDialog({
     return horses;
   }, [horses, lesson.type]);
 
-  const handleSave = async () => {
-    if (!selectedHorseId) return;
+  const handleSave = () => {
+    if (!firestore || !selectedHorseId) return;
 
     const lessonRef = doc(firestore, 'lessons', lesson.id);
-    try {
-      await updateDoc(lessonRef, {
-        horseId: selectedHorseId,
-        status: 'Confirmed',
+    const lessonUpdate = {
+      horseId: selectedHorseId,
+      status: 'Confirmed' as 'Confirmed',
+    };
+    
+    updateDoc(lessonRef, lessonUpdate)
+      .then(() => {
+        toast({
+          title: 'Horse Assigned!',
+          description: 'The horse has been successfully assigned to the lesson.',
+        });
+        onOpenChange(false);
+      })
+      .catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: lessonRef.path,
+            operation: 'update',
+            requestResourceData: lessonUpdate,
+          })
+        );
       });
-      toast({
-        title: 'Horse Assigned!',
-        description: 'The horse has been successfully assigned to the lesson.',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating lesson:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: 'There was a problem assigning the horse.',
-      });
-    }
   };
 
   return (
@@ -85,7 +90,7 @@ export function SelectHorseDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto p-1">
-          {loading ? (
+          {isLoading ? (
             <p>Loading horses...</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

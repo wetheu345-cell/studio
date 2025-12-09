@@ -1,9 +1,9 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,13 @@ export default function SignupPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+        router.push('/account');
+    }
+  }, [user, isUserLoading, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,21 +44,35 @@ export default function SignupPage() {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
 
-      // Store user role in Firestore
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
+      const userDocRef = doc(firestore, 'users', newUser.uid);
+      const userData = {
+        uid: newUser.uid,
+        email: newUser.email,
+        displayName: newUser.email, 
         role: role,
         createdAt: new Date(),
-      });
+      };
       
-      if (role === 'Instructor' || role === 'Manager') {
-        router.push('/admin');
-      } else {
-        router.push('/account');
-      }
+      setDoc(userDocRef, userData)
+        .then(() => {
+          if (role === 'Instructor' || role === 'Manager') {
+            router.push('/admin');
+          } else {
+            router.push('/account');
+          }
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: userDocRef.path,
+              operation: 'create',
+              requestResourceData: userData
+            })
+          );
+        });
 
     } catch (err: any) {
       setError(err.message);
@@ -63,23 +84,44 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      // For Google Sign-in, we'll default to 'Rider' but ideally you'd have a role selection step
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        role: 'Rider', // Default role
+      const newUser = userCredential.user;
+      
+      const userDocRef = doc(firestore, 'users', newUser.uid);
+      const userData = {
+        uid: newUser.uid,
+        email: newUser.email,
+        displayName: newUser.displayName,
+        photoURL: newUser.photoURL,
+        role: 'Rider', // Default role for Google Sign-in
         createdAt: new Date(),
-      }, { merge: true });
+      };
 
-      router.push('/account');
+      setDoc(userDocRef, userData, { merge: true })
+        .then(() => {
+          router.push('/account');
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: userDocRef.path,
+              operation: 'create',
+              requestResourceData: userData
+            })
+          );
+        });
     } catch (err: any) {
       setError(err.message);
     }
   };
+
+  if (isUserLoading || user) {
+    return (
+        <div className="container py-12 text-center">
+            <p>Loading...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="container flex flex-col items-center py-12">

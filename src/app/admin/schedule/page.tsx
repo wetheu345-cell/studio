@@ -13,7 +13,7 @@ import { collection } from "firebase/firestore";
 export default function AdminSchedulePage() {
   const firestore = useFirestore();
   const lessonsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'lessons') : null, [firestore]);
-  const { data: lessons, loading } = useCollection<Lesson>(lessonsCollection);
+  const { data: lessons, isLoading } = useCollection<Lesson>(lessonsCollection);
 
   return (
     <div className="p-4 md:p-8 grid gap-8 md:grid-cols-3">
@@ -52,11 +52,11 @@ export default function AdminSchedulePage() {
       <div className="md:col-span-1">
         <PageHeader title="Upcoming" className="text-left" />
         <div className="mt-8 space-y-4">
-            {loading && <p>Loading...</p>}
+            {isLoading && <p>Loading...</p>}
             {lessons?.map(lesson => (
                 <Card key={lesson.id} className="p-4 flex items-center justify-between">
                     <div>
-                        <p className="font-bold">{lesson.userId}</p>
+                        <p className="font-bold">{lesson.userName}</p>
                         <p className="text-sm text-muted-foreground">{lesson.time} - {lesson.type} Lesson</p>
                     </div>
                     <Badge variant={lesson.status === 'Confirmed' ? 'default' : 'secondary'}>{lesson.status}</Badge>

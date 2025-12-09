@@ -1,8 +1,9 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,60 +19,56 @@ export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && user && firestore) {
+      const userDocRef = doc(firestore, 'users', user.uid);
+      getDoc(userDocRef).then(userDoc => {
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.role === 'Instructor' || userData.role === 'Manager') {
+            router.push('/admin');
+          } else {
+            router.push('/account');
+          }
+        } else {
+          router.push('/account');
+        }
+      });
+    }
+  }, [user, isUserLoading, firestore, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!auth || !firestore) return;
+    if (!auth) return;
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.role === 'Instructor' || userData.role === 'Manager') {
-          router.push('/admin');
-        } else {
-          router.push('/account');
-        }
-      } else {
-         router.push('/account');
-      }
-
+      await signInWithEmailAndPassword(auth, email, password);
+      // The useEffect will handle the redirect
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
-        const userCredential = await signInWithPopup(auth, provider);
-        const user = userCredential.user;
-        
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (userData.role === 'Instructor' || userData.role === 'Manager') {
-                router.push('/admin');
-            } else {
-                router.push('/account');
-            }
-        } else {
-            // New Google sign-in user, default to rider and send to account
-            // Or prompt to select a role
-            router.push('/account');
-        }
+      await signInWithPopup(auth, provider);
+      // The useEffect will handle the redirect
     } catch (err: any) {
-        setError(err.message);
+      setError(err.message);
     }
+  };
+
+  if (isUserLoading || user) {
+    return (
+      <div className="container py-12 text-center">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (

@@ -1,22 +1,24 @@
 
 'use client';
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase"
+import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase"
 import type { Horse } from "@/lib/types";
 import { collection, deleteDoc, doc } from "firebase/firestore"
 import { HorseFormDialog } from "./_components/horse-form-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminHorsesPage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
   const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const { data: horses, loading } = useCollection<Horse>(horsesCollection);
+  const { data: horses, isLoading } = useCollection<Horse>(horsesCollection);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHorse, setSelectedHorse] = useState<Horse | undefined>(undefined);
 
@@ -30,12 +32,25 @@ export default function AdminHorsesPage() {
     setIsDialogOpen(true);
   }
 
-  const handleDeleteHorse = async (horseId: string) => {
+  const handleDeleteHorse = (horseId: string) => {
+    if (!firestore) return;
     if (window.confirm("Are you sure you want to delete this horse?")) {
-      await deleteDoc(doc(firestore, 'horses', horseId));
+      const horseRef = doc(firestore, 'horses', horseId);
+      deleteDoc(horseRef)
+        .then(() => {
+          toast({ title: 'Success', description: 'Horse deleted successfully.' });
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: horseRef.path,
+              operation: 'delete'
+            })
+          );
+        });
     }
   }
-
 
   return (
     <div className="p-4 md:p-8">
@@ -60,7 +75,7 @@ export default function AdminHorsesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && Array.from({ length: 5 }).map((_, i) => (
+              {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="font-medium">Loading...</TableCell>
                   <TableCell>Loading...</TableCell>

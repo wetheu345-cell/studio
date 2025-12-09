@@ -1,3 +1,4 @@
+
 export interface Horse {
   id: string;
   name: string;
@@ -14,7 +15,7 @@ export interface Instructor {
   name: string;
   specialty: string;
   bio: string;
-imageUrl: string;
+  imageUrl: string;
   imageHint: string;
   userId?: string;
 }

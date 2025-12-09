@@ -1,5 +1,6 @@
 
 'use client';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
@@ -7,20 +8,55 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { Instructor } from "@/lib/types";
-import { collection } from "firebase/firestore";
+import { collection, deleteDoc, doc } from "firebase/firestore";
+import { InstructorFormDialog } from './_components/instructor-form-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminInstructorsPage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
   const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
-  const { data: instructors, loading } = useCollection<Instructor>(instructorsCollection);
+  const { data: instructors, isLoading } = useCollection<Instructor>(instructorsCollection);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedInstructor, setSelectedInstructor] = useState<Instructor | undefined>(undefined);
+
+  const handleAddInstructor = () => {
+    setSelectedInstructor(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditInstructor = (instructor: Instructor) => {
+    setSelectedInstructor(instructor);
+    setIsDialogOpen(true);
+  }
+
+  const handleDeleteInstructor = (instructorId: string) => {
+    if (!firestore) return;
+    if (window.confirm("Are you sure you want to delete this instructor?")) {
+      const instructorRef = doc(firestore, 'instructors', instructorId);
+      deleteDoc(instructorRef)
+        .then(() => {
+          toast({ title: 'Success', description: 'Instructor deleted successfully.' });
+        })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: instructorRef.path,
+              operation: 'delete'
+            })
+          );
+        });
+    }
+  }
 
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
         <PageHeader title="Manage Instructors" className="text-left" />
-        <Button>
+        <Button onClick={handleAddInstructor}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Instructor
         </Button>
       </div>
@@ -37,7 +73,7 @@ export default function AdminInstructorsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && Array.from({ length: 3 }).map((_, i) => (
+              {isLoading && Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
@@ -73,9 +109,9 @@ export default function AdminInstructorsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditInstructor(instructor)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View Schedule</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteInstructor(instructor.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -85,6 +121,11 @@ export default function AdminInstructorsPage() {
           </Table>
         </CardContent>
       </Card>
+      <InstructorFormDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        instructor={selectedInstructor}
+      />
     </div>
   )
 }

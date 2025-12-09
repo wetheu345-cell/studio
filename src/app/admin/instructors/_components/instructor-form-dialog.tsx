@@ -21,122 +21,107 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
-import type { Horse, HorseFormData } from '@/lib/types';
+import type { Instructor } from '@/lib/types';
 import { useEffect } from 'react';
 
 const FormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  breed: z.string().min(1, 'Breed is required'),
-  age: z.coerce.number().min(0, 'Age must be a positive number'),
-  description: z.string().min(1, 'Description is required'),
-  suitability: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Therapy']),
+  specialty: z.string().min(1, 'Specialty is required'),
+  bio: z.string().min(1, 'Bio is required'),
   imageFile: z.any().optional(),
 });
 
-interface HorseFormDialogProps {
+type InstructorFormData = z.infer<typeof FormSchema>;
+
+interface InstructorFormDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  horse?: Horse;
+  instructor?: Instructor;
 }
 
-export function HorseFormDialog({
+export function InstructorFormDialog({
   isOpen,
   onOpenChange,
-  horse,
-}: HorseFormDialogProps) {
+  instructor,
+}: InstructorFormDialogProps) {
   const firestore = useFirestore();
   const storage = getStorage();
   const { toast } = useToast();
 
-  const form = useForm<HorseFormData>({
+  const form = useForm<InstructorFormData>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: '',
-      breed: '',
-      age: 0,
-      description: '',
-      suitability: 'Beginner',
+      specialty: '',
+      bio: '',
     },
   });
 
   useEffect(() => {
-    if (horse) {
+    if (instructor) {
       form.reset({
-        name: horse.name,
-        breed: horse.breed,
-        age: horse.age,
-        description: horse.description,
-        suitability: horse.suitability,
+        name: instructor.name,
+        specialty: instructor.specialty,
+        bio: instructor.bio,
       });
     } else {
       form.reset({
         name: '',
-        breed: '',
-        age: 0,
-        description: '',
-        suitability: 'Beginner',
+        specialty: '',
+        bio: '',
       });
     }
-  }, [horse, form]);
+  }, [instructor, form]);
 
-  const onSubmit = async (data: HorseFormData) => {
+  const onSubmit = async (data: InstructorFormData) => {
     if (!firestore) return;
 
-    let imageUrl = horse?.imageUrl || '';
-    let imageHint = horse?.imageHint || 'horse';
+    let imageUrl = instructor?.imageUrl || '';
+    let imageHint = instructor?.imageHint || 'person';
 
     try {
         if (data.imageFile && data.imageFile.length > 0) {
             const file = data.imageFile[0];
-            const storageRef = ref(storage, `horses/${Date.now()}_${file.name}`);
+            const storageRef = ref(storage, `instructors/${Date.now()}_${file.name}`);
             const snapshot = await uploadBytes(storageRef, file);
             imageUrl = await getDownloadURL(snapshot.ref);
             imageHint = 'custom upload'; 
         }
 
-        const horseData = {
+        const instructorData = {
             name: data.name,
-            breed: data.breed,
-            age: data.age,
-            description: data.description,
-            suitability: data.suitability,
+            specialty: data.specialty,
+            bio: data.bio,
             imageUrl,
             imageHint,
         };
 
-        if (horse) {
-            const horseRef = doc(firestore, 'horses', horse.id);
-            updateDoc(horseRef, horseData)
+        if (instructor) {
+            const instructorRef = doc(firestore, 'instructors', instructor.id);
+            updateDoc(instructorRef, instructorData)
                 .then(() => {
-                toast({ title: 'Success', description: 'Horse updated successfully.' });
+                toast({ title: 'Success', description: 'Instructor updated successfully.' });
                 })
                 .catch(error => {
                 errorEmitter.emit(
                     'permission-error',
                     new FirestorePermissionError({
-                    path: horseRef.path,
+                    path: instructorRef.path,
                     operation: 'update',
-                    requestResourceData: horseData
+                    requestResourceData: instructorData
                     })
                 );
                 });
         } else {
-            const collectionRef = collection(firestore, 'horses');
-            addDoc(collectionRef, horseData)
+            const collectionRef = collection(firestore, 'instructors');
+            addDoc(collectionRef, instructorData)
                 .then(() => {
-                toast({ title: 'Success', description: 'Horse added successfully.' });
+                toast({ title: 'Success', description: 'Instructor added successfully.' });
                 })
                 .catch(error => {
                 errorEmitter.emit(
@@ -144,7 +129,7 @@ export function HorseFormDialog({
                     new FirestorePermissionError({
                     path: collectionRef.path,
                     operation: 'create',
-                    requestResourceData: horseData
+                    requestResourceData: instructorData
                     })
                 );
                 });
@@ -152,7 +137,7 @@ export function HorseFormDialog({
 
         onOpenChange(false);
         form.reset();
-    } catch (e: any) {
+    } catch(e: any) {
         toast({ variant: 'destructive', title: 'Upload Failed', description: e.message });
     }
   };
@@ -161,7 +146,7 @@ export function HorseFormDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{horse ? 'Edit Horse' : 'Add New Horse'}</DialogTitle>
+          <DialogTitle>{instructor ? 'Edit Instructor' : 'Add New Instructor'}</DialogTitle>
           <DialogDescription>
             Fill in the details below. Click save when you're done.
           </DialogDescription>
@@ -175,7 +160,7 @@ export function HorseFormDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Apollo" {...field} />
+                    <Input placeholder="Jane Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -183,12 +168,12 @@ export function HorseFormDialog({
             />
             <FormField
               control={form.control}
-              name="breed"
+              name="specialty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Breed</FormLabel>
+                  <FormLabel>Specialty</FormLabel>
                   <FormControl>
-                    <Input placeholder="Thoroughbred" {...field} />
+                    <Input placeholder="Beginner & Youth Lessons" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,51 +181,12 @@ export function HorseFormDialog({
             />
             <FormField
               control={form.control}
-              name="age"
+              name="bio"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Age</FormLabel>
+                  <FormLabel>Bio</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="suitability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Suitability</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select suitability" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Beginner">Beginner</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate</SelectItem>
-                      <SelectItem value="Advanced">Advanced</SelectItem>
-                      <SelectItem value="Therapy">Therapy</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="A brief description..." {...field} />
+                    <Textarea placeholder="A brief bio..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -258,6 +204,7 @@ export function HorseFormDialog({
                       accept="image/*"
                       onChange={(e) => field.onChange(e.target.files)}
                     />
+  
                   </FormControl>
                   <FormMessage />
                 </FormItem>

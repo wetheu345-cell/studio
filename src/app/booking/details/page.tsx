@@ -1,10 +1,9 @@
 
 'use client'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
-import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase'
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase'
 import { collection } from 'firebase/firestore'
 import type { Horse, Instructor } from '@/lib/types'
 import { PageHeader } from '@/components/page-header'
@@ -13,13 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ArrowRight, CheckCircle } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { useMemo } from 'react'
 
 export default function BookingDetailsPage() {
   const router = useRouter()
@@ -36,8 +29,8 @@ export default function BookingDetailsPage() {
   const horsesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
   const instructorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
 
-  const { data: horses, loading: horsesLoading } = useCollection<Horse>(horsesCollection);
-  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
+  const { data: horses, isLoading: horsesLoading } = useCollection<Horse>(horsesCollection);
+  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
 
 
   const handleNext = () => {

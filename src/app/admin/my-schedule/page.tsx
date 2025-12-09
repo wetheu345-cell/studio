@@ -5,7 +5,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import type { Lesson, Instructor } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -27,14 +27,14 @@ export default function MySchedulePage() {
     () => (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
-  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
+  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
   const instructor = instructors?.[0];
 
   const lessonsQuery = useMemoFirebase(
     () => (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id)) : null),
     [firestore, instructor]
   );
-  const { data: lessons, loading: lessonsLoading } = useCollection<Lesson>(lessonsQuery);
+  const { data: lessons, isLoading: lessonsLoading } = useCollection<Lesson>(lessonsQuery);
   
   const loading = instructorsLoading || lessonsLoading;
 
