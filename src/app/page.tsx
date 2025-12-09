@@ -1,9 +1,11 @@
+
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HorseCard } from '@/components/horse-card';
 import { InstructorCard } from '@/components/instructor-card';
@@ -15,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
+  const carouselImages = PlaceHolderImages.filter(img => ['about-1', 'about-2', 'high-horse-1'].includes(img.id));
   const firestore = useFirestore();
 
   const horsesCollection = useMemo(() => (firestore ? collection(firestore, 'horses') : null), [firestore]);
@@ -57,6 +60,36 @@ export default function Home() {
               </Link>
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section className="w-full py-12 md:py-24">
+        <div className="container px-4 md:px-6">
+           <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {PlaceHolderImages.map((image, index) => (
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                  <div className="p-1">
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-0">
+                         <div className="relative aspect-video">
+                            <Image src={image.imageUrl} alt={image.name} fill className="object-cover" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex" />
+            <CarouselNext className="hidden sm:flex" />
+          </Carousel>
         </div>
       </section>
       
