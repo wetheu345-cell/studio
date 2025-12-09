@@ -108,7 +108,7 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes via a `customerId` field.
      */
     match /lessons/{lessonId} {
-      allow get: if isSignedIn() && isOwner(resource.data.customerId);
+      allow get: if isSignedIn() && (isOwner(resource.data.customerId) || isManager());
       allow list: if isSignedIn();
       allow create: if isSignedIn() && isSignedUpCustomer() && isCreatingOwnDocument();
       allow update: if resource != null && isSignedIn() && isOwner(resource.data.customerId) && isMaintainingOwnership();
