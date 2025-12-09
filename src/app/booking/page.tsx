@@ -59,7 +59,7 @@ export default function BookingPage({
             <Card className={`w-full hover:border-accent cursor-pointer transition-all duration-300 flex flex-col ${type === 'Therapy' ? 'border-accent border-2' : ''}`}>
               <CardHeader>
                 <CardTitle className="font-headline text-2xl tracking-wide">Therapy Session</CardTitle>
-                <CardDescription>A guided session for emotional growth and well-being, utilizing horses to promote healing and personal development.</CardDescription>
+                <CardDescription>Riding for therapy is an equine-assisted activity that improves balance, strength, and coordination, as well as providing stress relief and enhancing cognitive and social skills.</CardDescription>
               </CardHeader>
                <CardContent className="flex-grow flex flex-col justify-end">
                  <div className="text-center mt-auto">
