@@ -131,8 +131,7 @@ service cloud.firestore {
      * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
      */
     match /instructors/{instructorId} {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow write: if false;
     }
 
@@ -144,8 +143,7 @@ service cloud.firestore {
      * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
      */
     match /horses/{horseId} {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow write: if false;
     }
   }
