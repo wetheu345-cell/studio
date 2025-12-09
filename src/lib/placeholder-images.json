@@ -142,14 +142,6 @@
       "imageHint": "shiny horse"
     },
     {
-      "id": "horse-16",
-      "name": "Tyche",
-      "breed": "Knabstrupper",
-      "type": "horse",
-      "imageUrl": "https://images.unsplash.com/photo-1664886891990-2835095da6a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxkYWxtYXRpYW4lMjBob3JzZXxlbnwwfHx8fDE3NjUyNDc4MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "dalmatian horse"
-    },
-    {
       "id": "instructor-1",
       "name": "Jane Doe",
       "type": "instructor",
