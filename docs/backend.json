@@ -63,9 +63,9 @@
           "type": "string",
           "description": "Reference to Horse. (Relationship: Horse 1:N Lesson)"
         },
-        "customerId": {
+        "userId": {
           "type": "string",
-          "description": "Reference to Customer. (Relationship: Customer 1:N Lesson)"
+          "description": "Reference to User/Customer. (Relationship: User 1:N Lesson)"
         },
         "startTime": {
           "type": "string",
@@ -91,10 +91,9 @@
         "lessonType",
         "instructorId",
         "horseId",
-        "customerId",
+        "userId",
         "startTime",
-        "endTime",
-        "paymentId"
+        "endTime"
       ]
     },
     "Instructor": {
@@ -174,7 +173,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Customer",
       "type": "object",
-      "description": "Represents a customer.",
+      "description": "Represents a customer. This is now merged into the User entity.",
       "properties": {
         "id": {
           "type": "string",
@@ -257,34 +256,14 @@
         }
       },
       {
-        "path": "/customers/{customerId}",
-        "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores customer profiles.  Customer can only read/write their own profile data. Admin can read all.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique identifier for the customer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}/lessons/{lessonId}",
+        "path": "/lessons/{lessonId}",
         "definition": {
           "entityName": "Lesson",
           "schema": {
             "$ref": "#/backend/entities/Lesson"
           },
-          "description": "Stores lessons associated with a specific customer. The customer can read/write their own lessons. Admin can read all.",
+          "description": "Stores all lessons. Admins can read all. Users can only read/write their own lessons.",
           "params": [
-            {
-              "name": "customerId",
-              "description": "The unique identifier for the customer."
-            },
             {
               "name": "lessonId",
               "description": "The unique identifier for the lesson."
@@ -331,7 +310,7 @@
           "schema": {
             "$ref": "#/backend/entities/Payment"
           },
-          "description": "Stores payment information.  Payments could also live as a subcollection of lessons for clarity.",
+          "description": "Stores payment information. Admins can manage all payments.",
           "params": [
             {
               "name": "paymentId",
@@ -341,6 +320,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the EHW Lessons application, focusing on scheduling horse riding lessons (therapy and regular), managing instructors and horses, and processing payments. The structure emphasizes security, scalability, and debuggability, adhering to the core design principles.\n\n**Authorization Independence:** Achieved through path-based ownership for user-related data (lessons). Collaborative data (if any) would utilize membership maps. For example, lessons are stored under the customer's ID, making ownership clear and rules simple.\n\n**Structural Segregation:** Different data types (lessons, instructors, horses, customers, payments) are stored in separate collections, ensuring that each collection has a homogeneous security posture.\n\n**Access Modeling:**\n*   Private Data: Lessons are organized under each Customer (`/customers/{customerId}/lessons/{lessonId}`), ensuring that only the customer and authorized personnel (e.g., admins) can access their lesson data. This enforces clear ownership.\n*   Collaborative Data: Not explicitly defined in the requirements, but if needed, a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) could be added to relevant documents to manage access.\n*   Global Roles:  Admin roles, if needed, would be managed via a dedicated collection (e.g., `/roles_admin/{uid}`), checked for existence in the security rules.\n\n**QAPs (Rules are not Filters):** The segregation of data into different collections based on access requirements ensures that list operations are secure. Path-based ownership of lessons guarantees that listing lessons under a customer ID only returns lessons belonging to that customer.\n\nThe design ensures atomic operations by avoiding hierarchical authorization dependencies. The denormalization strategy, applied where necessary (e.g., copying relevant user data into subcollections), further enhances authorization independence and simplifies security rules."
+    "reasoning": "The Firestore data structure has been updated to use a top-level `/lessons` collection. This simplifies queries for administrators and instructors who need to see a full schedule. Security is maintained by adding a `userId` field to each lesson document, allowing rules to enforce that users can only access their own lessons. This denormalization is a standard and scalable pattern in Firestore."
   }
 }
