@@ -17,8 +17,8 @@ export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
   const firestore = useFirestore();
 
-  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
-  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+  const horsesCollection = firestore ? collection(firestore, 'horses') : null;
+  const instructorsCollection = firestore ? collection(firestore, 'instructors') : null;
 
   const { data: horses } = useCollection<Horse>(horsesCollection);
   const { data: instructors } = useCollection<Instructor>(instructorsCollection);
@@ -40,7 +40,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
           <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl tracking-wider">
-            EHI
+            EHW
           </h1>
           <p className="mt-4 max-w-2xl text-lg md:text-xl font-body">
             Experience the joy and therapeutic power of horseback riding. Join our community and embark on an unforgettable journey.
