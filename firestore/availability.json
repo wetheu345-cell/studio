@@ -1,0 +1,8 @@
+
+{"instructorId":"1","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-23","startTime":"09:00","endTime":"12:00"},{"date":"2024-07-23","startTime":"14:00","endTime":"17:00"},{"date":"2024-07-25","startTime":"09:00","endTime":"12:00"}]}
+{"instructorId":"2","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-22","startTime":"10:00","endTime":"13:00"},{"date":"2024-07-24","startTime":"13:00","endTime":"16:00"},{"date":"2024-07-26","startTime":"10:00","endTime":"13:00"}]}
+{"instructorId":"3","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-22","startTime":"09:00","endTime":"11:00"},{"date":"2024-07-24","startTime":"09:00","endTime":"11:00"},{"date":"2024-07-26","startTime":"14:00","endTime":"17:00"}]}
+{"instructorId":"4","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-23","startTime":"10:00","endTime":"15:00"},{"date":"2024-07-25","startTime":"10:00","endTime":"15:00"}]}
+{"instructorId":"5","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-22","startTime":"13:00","endTime":"17:00"},{"date":"2024-07-24","startTime":"13:00","endTime":"17:00"}]}
+{"instructorId":"6","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-23","startTime":"09:00","endTime":"13:00"},{"date":"2024-07-25","startTime":"09:00","endTime":"13:00"},{"date":"2024-07-27","startTime":"09:00","endTime":"12:00"}]}
+{"instructorId":"7","weekStartDate":"2024-07-22","timeSlots":[{"date":"2024-07-24","startTime":"10:00","endTime":"14:00"},{"date":"2024-07-26","startTime":"10:00","endTime":"14:00"},{"date":"2024-07-27","startTime":"10:00","endTime":"14:00"}]}
