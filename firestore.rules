@@ -18,29 +18,30 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function getUserRole(userId) {
-      // Return a user's role from the /users collection.
-      // Defaults to 'Rider' if the user document doesn't exist.
-      return get(/databases/$(database)/documents/users/$(userId)).data.role;
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
-    function isAdmin() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'Admin';
+    function isRole(role) {
+      let userRole = getUserData(request.auth.uid).role;
+      return userRole == role;
+    }
+
+    function isOneOfRoles(roles) {
+      let userRole = getUserData(request.auth.uid).role;
+      return isSignedIn() && userRole in roles;
     }
 
     function isManager() {
-      let userRole = getUserRole(request.auth.uid);
-      return isSignedIn() && (userRole == 'Admin' || userRole == 'Manager');
+      return isOneOfRoles(['Admin', 'Manager']);
     }
 
     function isInstructor() {
-      let userRole = getUserRole(request.auth.uid);
-      return isSignedIn() && (userRole == 'Admin' || userRole == 'Manager' || userRole == 'Instructor');
+      return isOneOfRoles(['Admin', 'Manager', 'Instructor']);
     }
     
     // --- Public Collections ---
-
-    // Horses and Instructors are publicly readable by anyone.
+    // Horses and Instructors are publicly readable by anyone, including guests.
     // Write access is restricted to Managers and Admins.
     match /horses/{horseId} {
       allow get, list: if true;
@@ -53,7 +54,6 @@ service cloud.firestore {
     }
 
     // --- User Data ---
-
     // Users can create their own profile upon signup.
     // They can read their own profile. Managers/Admins can list/view all profiles.
     // Role changes can only be made by an Admin.
@@ -61,12 +61,12 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow get: if isOwner(userId) || isManager();
       allow list: if isManager();
-      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
-      allow delete: if isAdmin();
+      // Allow user to update their own profile, but NOT their role unless they are an Admin.
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isRole('Admin');
+      allow delete: if isRole('Admin');
     }
     
     // --- Private User Content ---
-
     // Customer data is private to the user themselves, or managers/admins.
     match /customers/{customerId} {
       allow create: if isOwner(customerId);
@@ -75,16 +75,15 @@ service cloud.firestore {
     }
 
     // --- Application Data ---
-
     // Lessons can be created by any signed-in user for themselves.
     // Lessons can be read by the user who owns it, the assigned instructor, or a manager/admin.
     // Instructors can list lessons to see their schedule.
     // Updates can be made by the owner, assigned instructor, or manager/admin.
     match /lessons/{lessonId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow get: if (isSignedIn() && resource.data.userId == request.auth.uid) || isInstructor();
-      allow list: if isInstructor(); 
-      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
+      // Allow read access for the user who booked, any instructor, manager, or admin.
+      allow get, list: if (isSignedIn() && resource.data.userId == request.auth.uid) || isInstructor(); 
+      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || (isInstructor() && resource.data.instructorId == getUserData(request.auth.uid).id) || isManager();
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isManager();
     }
 
@@ -93,8 +92,8 @@ service cloud.firestore {
     // Managers/Admins can manage any availability.
     match /availability/{availabilityId} {
       allow get, list: if isSignedIn();
-      allow create: if isInstructor() && request.resource.data.instructorId == request.auth.uid;
-      allow update: if (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
+      allow create: if isInstructor() && request.resource.data.instructorId == getUserData(request.auth.uid).id;
+      allow update: if (isInstructor() && resource.data.instructorId == getUserData(request.auth.uid).id) || isManager();
       allow delete: if isManager();
     }
 
@@ -106,7 +105,7 @@ service cloud.firestore {
     }
 
     // Team chat is for Instructors, Managers, and Admins.
-    // Messages are immutable (cannot be updated or deleted).
+    // Messages are immutable (cannot be updated or deleted by users).
     match /team-chat/{messageId} {
       allow read, create: if isInstructor();
       allow update, delete: if false;
