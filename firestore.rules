@@ -126,8 +126,8 @@ service cloud.firestore {
     /**
      * @description Stores instructor profiles. This data is considered public and read-only for clients.
      * @path /instructors/{instructorId}
-     * @allow (get) Any user, authenticated or not, reading an instructor's profile.
-     * @deny (create) Any client attempting to create a new instructor profile.
+     * @allow (get, list) Any user, authenticated or not, reading instructor profiles.
+     * @deny (write) Any client attempting to create, update, or delete instructor profiles.
      * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
      */
     match /instructors/{instructorId} {
@@ -139,8 +139,8 @@ service cloud.firestore {
     /**
      * @description Stores horse profiles. This data is considered public and read-only for clients.
      * @path /horses/{horseId}
-     * @allow (list) Any user, authenticated or not, listing all available horses.
-     * @deny (update) Any client attempting to modify a horse's details.
+     * @allow (get, list) Any user, authenticated or not, can list all available horses.
+     * @deny (write) Any client attempting to modify a horse's details.
      * @principle Secures data as a public, read-only resource. Writes are disabled pending an admin role implementation.
      */
     match /horses/{horseId} {
