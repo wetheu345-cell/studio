@@ -44,7 +44,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'transition-colors hover:text-foreground/80',
+                  'transition-colors hover:text-foreground/80 tracking-wide',
                   pathname === link.href ? 'text-foreground' : 'text-foreground/60'
                 )}
               >
@@ -73,7 +73,7 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'transition-colors hover:text-foreground/80',
+                    'transition-colors hover:text-foreground/80 tracking-wide',
                     pathname === link.href ? 'text-foreground font-semibold' : 'text-foreground/60'
                   )}
                 >
@@ -115,10 +115,10 @@ export function Header() {
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <Link href="/account"><User className="mr-2" /> Profile</Link>
+                            <Link href="/account"><User className="mr-2 h-4 w-4" /> Profile</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2" />
+                            <LogOut className="mr-2 h-4 w-4" />
                             Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
