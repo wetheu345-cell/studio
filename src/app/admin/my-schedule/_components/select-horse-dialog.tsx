@@ -36,11 +36,11 @@ export function SelectHorseDialog({
     lesson.horseId || null
   );
 
-  const horsesCollection = useMemoFirebase(
+  const horsesCollectionRef = useMemoFirebase(
     () => (firestore ? collection(firestore, 'horses') : null),
     [firestore]
   );
-  const { data: horses, isLoading } = useCollection<Horse>(horsesCollection);
+  const { data: horses, isLoading } = useCollection<Horse>(horsesCollectionRef);
 
   const availableHorses = useMemo(() => {
     if (!horses) return [];
