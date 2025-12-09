@@ -1,5 +1,4 @@
 
-
 export interface Horse {
   id: string;
   name: string;
@@ -43,4 +42,30 @@ export interface Message {
   userId: string;
   userName: string;
   timestamp: any;
+}
+
+export interface TimeSlot {
+    date: string; // e.g., "2024-12-09"
+    startTime: string; // e.g., "09:00"
+    endTime: string; // e.g., "11:00"
+}
+
+export interface Availability {
+    id: string;
+    instructorId: string;
+    weekStartDate: string; // "2024-12-09"
+    timeSlots: TimeSlot[];
+}
+
+export interface MuseumRental {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+  notes?: string;
+  status: 'Pending' | 'Confirmed' | 'Cancelled';
 }

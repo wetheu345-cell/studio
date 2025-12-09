@@ -1,8 +1,8 @@
 
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { addDoc, collection } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
 import { PageHeader } from '@/components/page-header'
 import { Calendar } from '@/components/ui/calendar'
@@ -17,18 +17,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Phone } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-
-const generateTimeSlots = (start: number, end: number) => {
-  const slots = []
-  for (let i = start; i < end; i++) {
-    slots.push(`${i}:00`)
-    slots.push(`${i}:30`)
-  }
-  return slots
-}
-
-const weekDaySlots = generateTimeSlots(10, 16); // 10am to 4pm (16:00)
-const weekendSlots = generateTimeSlots(10, 15); // 10am to 3pm (15:00)
+import type { Availability } from '@/lib/types'
+import { format, startOfWeek } from 'date-fns'
 
 export default function BookingSchedulePage() {
   const router = useRouter()
@@ -39,11 +29,74 @@ export default function BookingSchedulePage() {
 
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string | undefined>()
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  const [isLoadingTimes, setIsLoadingTimes] = useState(false)
 
-  const day = date?.getDay()
-  const availableTimes = day === 0 || day === 6 ? weekendSlots : weekDaySlots
+  const instructorId = searchParams.get('instructorId')
 
-  const handleNext = () => {
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!firestore || !date || !instructorId) {
+        setAvailableTimes([]);
+        return;
+      }
+      
+      setIsLoadingTimes(true);
+      setTime(undefined); // Reset selected time when date changes
+
+      try {
+        const weekStart = startOfWeek(date);
+        const weekStartDateStr = format(weekStart, 'yyyy-MM-dd');
+        const selectedDateStr = format(date, 'yyyy-MM-dd');
+        
+        const q = query(
+          collection(firestore, 'availability'),
+          where('instructorId', '==', instructorId),
+          where('weekStartDate', '==', weekStartDateStr)
+        );
+
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          setAvailableTimes([]);
+          return;
+        }
+
+        const availabilityDoc = querySnapshot.docs[0].data() as Availability;
+        const slotsForDay = availabilityDoc.timeSlots
+          .filter(slot => slot.date === selectedDateStr)
+          .flatMap(slot => {
+              const start = parseInt(slot.startTime.split(':')[0]);
+              const end = parseInt(slot.endTime.split(':')[0]);
+              const times = [];
+              for (let i = start; i < end; i++) {
+                  times.push(`${String(i).padStart(2, '0')}:00`);
+                  times.push(`${String(i).padStart(2, '0')}:30`);
+              }
+              // Don't include the end time itself unless it's on the hour
+              if(slot.endTime.split(':')[1] === '00') {
+                  return times;
+              } else {
+                  return times.slice(0, -1);
+              }
+          })
+          .sort((a,b) => a.localeCompare(b));
+        
+        setAvailableTimes(slotsForDay);
+
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load availability." });
+        setAvailableTimes([]);
+      } finally {
+        setIsLoadingTimes(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [date, instructorId, firestore, toast]);
+
+
+  const handleNext = async () => {
     if (!date || !time || !user || !firestore) {
         toast({
             variant: "destructive",
@@ -61,20 +114,19 @@ export default function BookingSchedulePage() {
       time,
       userId: user.uid,
       userName: user.displayName || user.email || 'Unknown User',
-      status: 'Pending',
+      status: 'Pending' as 'Pending',
     }
 
     const collectionRef = collection(firestore, 'lessons');
-    addDoc(collectionRef, lessonData)
-      .then(docRef => {
+    try {
+        const docRef = await addDoc(collectionRef, lessonData)
         const params = new URLSearchParams(searchParams.toString())
         params.set('date', date.toISOString())
         params.set('time', time)
         params.set('lessonId', docRef.id)
         router.push(`/booking/confirm?${params.toString()}`)
-      })
-      .catch(error => {
-        errorEmitter.emit(
+    } catch (error) {
+         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
             path: collectionRef.path,
@@ -82,14 +134,14 @@ export default function BookingSchedulePage() {
             requestResourceData: lessonData
           })
         );
-      });
+    }
   }
 
   return (
     <div className="flex flex-col items-center">
       <PageHeader
         title="Schedule Your Lesson"
-        description="Select a date and time that works best for you."
+        description="Select an available date and time with your chosen instructor."
       />
 
       <div className="mt-8 w-full max-w-4xl grid md:grid-cols-2 gap-8 items-start">
@@ -105,24 +157,27 @@ export default function BookingSchedulePage() {
                 <Phone className="h-4 w-4" />
                 <AlertTitle>By Appointment Only</AlertTitle>
                 <AlertDescription>
-                    <p>Mon-Fri: 10am - 4pm</p>
-                    <p>Sat-Sun: 10am - 3pm</p>
+                    <p>Select a date to see your instructor's available times.</p>
                     <p className="mt-2">Call to inquire: (860) 293-2914 (M-F, 9-4)</p>
                 </AlertDescription>
             </Alert>
         </div>
         <div className="space-y-4">
-          <h3 className="font-semibold">Available Time Slots</h3>
-          <Select onValueChange={setTime} value={time}>
+          <h3 className="font-semibold">Available Time Slots for {date ? format(date, 'MMMM do') : '...'}</h3>
+          <Select onValueChange={setTime} value={time} disabled={isLoadingTimes || availableTimes.length === 0}>
             <SelectTrigger>
-              <SelectValue placeholder="Select a time" />
+              <SelectValue placeholder={isLoadingTimes ? "Loading times..." : "Select a time"} />
             </SelectTrigger>
             <SelectContent>
-              {availableTimes.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
+              {availableTimes.length > 0 ? (
+                availableTimes.map((slot) => (
+                  <SelectItem key={slot} value={slot}>
+                    {slot}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-times" disabled>No available times for this day</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
