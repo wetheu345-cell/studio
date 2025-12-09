@@ -11,6 +11,7 @@ import { useCollection, useFirestore } from '@/firebase';
 import { Horse, Instructor } from '@/lib/types';
 import { collection } from 'firebase/firestore';
 import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
@@ -19,8 +20,8 @@ export default function Home() {
   const horsesCollection = useMemo(() => (firestore ? collection(firestore, 'horses') : null), [firestore]);
   const instructorsCollection = useMemo(() => (firestore ? collection(firestore, 'instructors') : null), [firestore]);
 
-  const { data: horses } = useCollection<Horse>(horsesCollection);
-  const { data: instructors } = useCollection<Instructor>(instructorsCollection);
+  const { data: horses, isLoading: horsesLoading } = useCollection<Horse>(horsesCollection);
+  const { data: instructors, isLoading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
 
 
   return (
@@ -115,9 +116,19 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {horses?.slice(0, 4).map((horse) => (
-              <HorseCard key={horse.id} horse={horse} />
-            ))}
+            {horsesLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                    <Skeleton className="w-full aspect-[4/3]" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))
+            ) : (
+              horses?.slice(0, 4).map((horse) => (
+                <HorseCard key={horse.id} horse={horse} />
+              ))
+            )}
           </div>
           <div className="text-center mt-12">
             <Button asChild>
@@ -136,9 +147,19 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {instructors?.slice(0, 4).map((instructor) => (
-              <InstructorCard key={instructor.id} instructor={instructor} />
-            ))}
+             {instructorsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                        <Skeleton className="w-full aspect-square" />
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </div>
+                ))
+            ) : (
+                instructors?.slice(0, 4).map((instructor) => (
+                <InstructorCard key={instructor.id} instructor={instructor} />
+                ))
+            )}
           </div>
           <div className="text-center mt-12">
             <Button asChild>

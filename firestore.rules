@@ -1,95 +1,114 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
+    // By default, deny all reads and writes.
+    // Access must be explicitly granted by other rules.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    function getRole(userId) {
-      // Safely get the user's role, default to 'Rider' if document doesn't exist
+    function getUserRole(userId) {
+      // Return a user's role from the /users collection.
+      // Defaults to 'Rider' if the user document doesn't exist.
       return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
     function isAdmin() {
-      return isSignedIn() && getRole(request.auth.uid) == 'Admin';
+      return isSignedIn() && getUserRole(request.auth.uid) == 'Admin';
     }
 
     function isManager() {
-      let userRole = getRole(request.auth.uid);
+      let userRole = getUserRole(request.auth.uid);
       return isSignedIn() && (userRole == 'Admin' || userRole == 'Manager');
     }
 
     function isInstructor() {
-      let userRole = getRole(request.auth.uid);
+      let userRole = getUserRole(request.auth.uid);
       return isSignedIn() && (userRole == 'Admin' || userRole == 'Manager' || userRole == 'Instructor');
     }
+    
+    // --- Public Collections ---
 
-    // Public Collections: Horses and Instructors are publicly readable
+    // Horses and Instructors are publicly readable by anyone.
+    // Write access is restricted to Managers and Admins.
     match /horses/{horseId} {
       allow get, list: if true;
-      allow write: if isManager(); // Only managers/admins can modify
+      allow write: if isManager();
     }
 
     match /instructors/{instructorId} {
       allow get, list: if true;
-      allow write: if isManager(); // Only managers/admins can modify
+      allow write: if isManager();
     }
 
-    // User data is private
+    // --- User Data ---
+
+    // Users can create their own profile upon signup.
+    // They can read their own profile. Managers/Admins can list/view all profiles.
+    // Role changes can only be made by an Admin.
     match /users/{userId} {
+      allow create: if isOwner(userId);
       allow get: if isOwner(userId) || isManager();
       allow list: if isManager();
-      allow create: if (isOwner(userId) && request.resource.data.role == 'Rider') || isAdmin();
       allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin();
     }
     
-    // Customer data is private to the user or managers
-     match /customers/{customerId} {
-      allow get, update, delete: if (isSignedIn() && isOwner(customerId)) || isManager();
-      allow create: if isSignedIn() && isOwner(customerId);
+    // --- Private User Content ---
+
+    // Customer data is private to the user themselves, or managers/admins.
+    match /customers/{customerId} {
+      allow create: if isOwner(customerId);
+      allow get, update, delete: if isOwner(customerId) || isManager();
       allow list: if isManager();
     }
 
-    // Lessons have role-based access
+    // --- Application Data ---
+
+    // Lessons can be created by any signed-in user for themselves.
+    // Lessons can be read by the user who owns it, the assigned instructor, or a manager/admin.
+    // Instructors can list lessons to see their schedule.
+    // Updates can be made by the owner, assigned instructor, or manager/admin.
     match /lessons/{lessonId} {
-      // A user can get their own lesson, an instructor can get their assigned lesson, managers/admins see all
-      allow get: if (isSignedIn() && resource.data.userId == request.auth.uid) || isInstructor() || isManager();
-      // Instructors, Managers, and Admins can list lessons
-      allow list: if isInstructor(); 
-      // A signed-in user can create a lesson for themselves
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Users can update their own lesson (e.g. cancel), instructors can update assigned lessons, managers can update any
+      allow get: if (isSignedIn() && resource.data.userId == request.auth.uid) || isInstructor();
+      allow list: if isInstructor(); 
       allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
-      // Users can delete their own, managers can delete any
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isManager();
     }
 
-    // Availability can be managed by instructors for themselves, or by managers
+    // Availability can be viewed by any signed-in user to book lessons.
+    // Instructors can create/update their own availability.
+    // Managers/Admins can manage any availability.
     match /availability/{availabilityId} {
-      allow get, list: if isSignedIn(); // Any logged in user can see availability to book
+      allow get, list: if isSignedIn();
       allow create: if isInstructor() && request.resource.data.instructorId == request.auth.uid;
       allow update: if (isInstructor() && resource.data.instructorId == request.auth.uid) || isManager();
       allow delete: if isManager();
     }
 
-    // Museum Rentals
+    // Museum Rentals can be created by any signed-in user.
+    // They can only be viewed and managed by Managers/Admins.
     match /museumRentals/{rentalId} {
-        allow get, list: if isManager();
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if isManager();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow get, list, update, delete: if isManager();
     }
 
-    // Team chat is for instructors and managers
+    // Team chat is for Instructors, Managers, and Admins.
+    // Messages are immutable (cannot be updated or deleted).
     match /team-chat/{messageId} {
       allow read, create: if isInstructor();
-      // Messages are immutable
       allow update, delete: if false;
     }
   }
