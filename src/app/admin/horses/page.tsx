@@ -1,4 +1,5 @@
 'use client';
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
@@ -6,18 +7,39 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useCollection } from "@/firebase"
+import { useCollection, useFirestore } from "@/firebase"
 import type { Horse } from "@/lib/types";
-import { collection, getFirestore } from "firebase/firestore"
+import { collection, deleteDoc, doc } from "firebase/firestore"
+import { HorseFormDialog } from "./_components/horse-form-dialog";
 
 export default function AdminHorsesPage() {
+  const firestore = useFirestore();
   const { data: horses, loading } = useCollection<Horse>(collection(getFirestore(), 'horses'));
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedHorse, setSelectedHorse] = useState<Horse | undefined>(undefined);
+
+  const handleAddHorse = () => {
+    setSelectedHorse(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditHorse = (horse: Horse) => {
+    setSelectedHorse(horse);
+    setIsDialogOpen(true);
+  }
+
+  const handleDeleteHorse = async (horseId: string) => {
+    if (window.confirm("Are you sure you want to delete this horse?")) {
+      await deleteDoc(doc(firestore, 'horses', horseId));
+    }
+  }
+
 
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
         <PageHeader title="Manage Horses" className="text-left" />
-        <Button>
+        <Button onClick={handleAddHorse}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Horse
         </Button>
       </div>
@@ -65,8 +87,8 @@ export default function AdminHorsesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditHorse(horse)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteHorse(horse.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -76,6 +98,11 @@ export default function AdminHorsesPage() {
           </Table>
         </CardContent>
       </Card>
+      <HorseFormDialog 
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        horse={selectedHorse}
+      />
     </div>
   )
 }

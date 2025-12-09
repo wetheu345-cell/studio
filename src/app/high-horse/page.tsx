@@ -9,7 +9,7 @@ import { PlayCircle } from "lucide-react";
 
 export default function HighHorsePage() {
     const featureImage = PlaceHolderImages.find(img => img.id === 'high-horse-1');
-    const documentaryUrl = "https://www.peacocktv.com/watch-online/news/the-high-horse/4f17c31d-b873-35f9-b870-13b306449170";
+    const documentaryUrl = "https://www.peacocktv.com/watch-online/tv/high-horse-the-black-cowboy/7955261022260771112";
 
     return (
         <div className="container py-12 md:py-16">

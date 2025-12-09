@@ -30,3 +30,7 @@ export interface Lesson {
   userName: string;
   status: 'Confirmed' | 'Pending' | 'Cancelled';
 }
+
+export type HorseFormData = Omit<Horse, 'id' | 'imageUrl' | 'imageHint'> & {
+  imageFile?: FileList;
+};
