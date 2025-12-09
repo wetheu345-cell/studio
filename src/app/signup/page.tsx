@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
 import { doc, setDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { validateSignupCode } from '@/ai/flows/validate-signup-code';
 
 type UserRole = 'Rider' | 'Instructor' | 'Manager';
 
@@ -21,6 +22,7 @@ export default function SignupPage() {
   const [role, setRole] = useState<UserRole>('Rider');
   const [registrationCode, setRegistrationCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
@@ -35,11 +37,20 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!auth || !firestore) return;
+    setIsSigningUp(true);
+    if (!auth || !firestore) {
+      setError('Firebase is not initialized.');
+      setIsSigningUp(false);
+      return;
+    }
 
-    if ((role === 'Instructor' || role === 'Manager') && registrationCode !== process.env.NEXT_PUBLIC_PRIVATE_SIGNUP_CODE) {
-        setError('Invalid registration code.');
-        return;
+    if (role === 'Instructor' || role === 'Manager') {
+        const { isValid } = await validateSignupCode(registrationCode);
+        if (!isValid) {
+            setError('Invalid registration code.');
+            setIsSigningUp(false);
+            return;
+        }
     }
 
     try {
@@ -55,27 +66,18 @@ export default function SignupPage() {
         createdAt: new Date(),
       };
       
-      setDoc(userDocRef, userData)
-        .then(() => {
-          if (role === 'Instructor' || role === 'Manager') {
-            router.push('/admin');
-          } else {
-            router.push('/account');
-          }
-        })
-        .catch(error => {
-          errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-              path: userDocRef.path,
-              operation: 'create',
-              requestResourceData: userData
-            })
-          );
-        });
+      await setDoc(userDocRef, userData);
+
+      if (role === 'Instructor' || role === 'Manager') {
+        router.push('/admin');
+      } else {
+        router.push('/account');
+      }
 
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
@@ -96,20 +98,8 @@ export default function SignupPage() {
         createdAt: new Date(),
       };
 
-      setDoc(userDocRef, userData, { merge: true })
-        .then(() => {
-          router.push('/account');
-        })
-        .catch(error => {
-          errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-              path: userDocRef.path,
-              operation: 'create',
-              requestResourceData: userData
-            })
-          );
-        });
+      await setDoc(userDocRef, userData, { merge: true });
+      router.push('/account');
     } catch (err: any) {
       setError(err.message);
     }
@@ -125,7 +115,7 @@ export default function SignupPage() {
 
   return (
     <div className="container flex flex-col items-center py-12">
-      <PageHeader title="Sign Up" description="Create an account to start booking lessons." />
+      <PageHeader title="Sign Up" description="Create an account to start booking lessons." className="px-4"/>
       <Card className="w-full max-w-sm mt-8">
         <form onSubmit={handleSignup}>
           <CardHeader>
@@ -176,7 +166,9 @@ export default function SignupPage() {
             {error && <p className="text-destructive text-sm">{error}</p>}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" type="submit">Create account</Button>
+            <Button className="w-full" type="submit" disabled={isSigningUp}>
+              {isSigningUp ? 'Creating Account...' : 'Create account'}
+            </Button>
             <div className="text-center text-sm">
               Already have an account?{' '}
               <Link href="/login" className="underline">
