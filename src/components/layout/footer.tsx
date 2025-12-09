@@ -38,9 +38,7 @@ export function Footer() {
                     <li><Link href="/horses" className="text-muted-foreground hover:text-primary">Our Horses</Link></li>
                     <li><Link href="/instructors" className="text-muted-foreground hover:text-primary">Instructors</Link></li>
                     <li><a href="https://ebonyhorsewomen.org/donate" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">Donate</a></li>
-                    {isAdmin ? (
-                        <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin Dashboard</Link></li>
-                    ) : user ? (
+                    {user ? (
                          <li><Link href="/account" className="text-muted-foreground hover:text-primary">My Account</Link></li>
                     ) : (
                         <li><Link href="/login" className="text-muted-foreground hover:text-primary">Login</Link></li>
@@ -68,6 +66,13 @@ export function Footer() {
             </div>
         </div>
       </div>
+      {isAdmin && (
+        <div className="container mt-8 pt-4 border-t text-center">
+            <Link href="/admin" className="text-sm text-muted-foreground hover:text-primary font-semibold">
+                Admin Portal
+            </Link>
+        </div>
+      )}
     </footer>
   );
 }
