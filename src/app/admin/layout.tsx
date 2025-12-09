@@ -35,20 +35,12 @@ export default function AdminLayout({
     
     // If user is logged in, check their role from Firestore
     if (firestore) {
-      // The manager role is hardcoded in security rules to a specific email.
-      // We can perform a client-side check for a better UX, but the rules are the source of truth.
-      if (user.email === 'wetheu345@gmail.com') {
-        setIsAuthorized(true);
-        setAuthCheckCompleted(true);
-        return;
-      }
-
       const userDocRef = doc(firestore, 'users', user.uid);
       getDoc(userDocRef).then(userDoc => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           // Check if user has an authorized role
-          if (userData.role === 'Instructor' || userData.role === 'Manager') {
+          if (userData.role === 'Instructor' || userData.role === 'Manager' || userData.role === 'Admin') {
             setIsAuthorized(true);
           } else {
             // If role is not authorized, redirect to their account page

@@ -11,17 +11,17 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
-    // Admin is the super user, with the specified email.
-    function isAdmin() {
-      return request.auth.token.email == 'wetheu345@gmail.com';
-    }
-
     function getRole(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
+    function isAdmin() {
+      return getRole(request.auth.uid) == 'Admin';
+    }
+
     function isManager() {
-      return getRole(request.auth.uid) == 'Manager' || isAdmin();
+      let userRole = getRole(request.auth.uid);
+      return userRole == 'Manager' || userRole == 'Admin';
     }
     
     function isInstructor() {
@@ -39,7 +39,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isManager();
       allow list: if isManager();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isManager();
+      allow update: if isOwner(userId) || isAdmin(); // Only admin can change roles
+      allow update(role): if isAdmin();
     }
     
     // Customers: Users can only access their own customer document.
