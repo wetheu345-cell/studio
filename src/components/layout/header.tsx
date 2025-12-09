@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/icons';
-import { useUser, useAuth, useSidebar } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SidebarTrigger } from '../ui/sidebar';
@@ -19,8 +19,6 @@ export function Header() {
   const pathname = usePathname();
   const { user, loading } = useUser();
   const auth = useAuth() as Auth;
-  const { isMobile } = useSidebar();
-
 
   const navLinks = [
     { href: '/', label: 'Home' },
