@@ -1,12 +1,12 @@
 'use client';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AdminSidebar } from "./_components/admin-sidebar"
+import { AdminHeader } from "./_components/admin-header"
 import { useUser, useFirestore } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { Logo } from "@/components/icons";
-import { Header } from "@/components/layout/header";
 import { FirebaseErrorListener } from "@/components/FirebaseErrorListener";
 
 export default function AdminLayout({
@@ -51,7 +51,7 @@ export default function AdminLayout({
       <FirebaseErrorListener />
       <AdminSidebar />
       <SidebarInset>
-        <Header />
+        <AdminHeader />
         {loading || !isAuthorized ? (
           <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center">
             <div className="animate-pulse">
