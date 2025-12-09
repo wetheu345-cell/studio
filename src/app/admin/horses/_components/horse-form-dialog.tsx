@@ -97,9 +97,6 @@ export function HorseFormDialog({
     let imageUrl = horse?.imageUrl || '';
     let imageHint = horse?.imageHint || 'horse';
     
-    // Set loading state
-    form.formState.isSubmitting = true;
-
     try {
         if (data.imageFile && data.imageFile.length > 0) {
             const file = data.imageFile[0];
@@ -158,9 +155,6 @@ export function HorseFormDialog({
 
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Upload Failed', description: e.message });
-    } finally {
-        // Unset loading state
-        form.formState.isSubmitting = false;
     }
   };
 
