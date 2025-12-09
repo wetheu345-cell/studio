@@ -7,3 +7,5 @@ To get started, run the development server:
 ```bash
 npm run dev
 ```
+
+The application is configured to deploy automatically to Firebase App Hosting upon changes.
