@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('Rider');
+  const [registrationCode, setRegistrationCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const firestore = useFirestore();
@@ -27,6 +29,11 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     if (!auth || !firestore) return;
+
+    if ((role === 'Instructor' || role === 'Manager') && registrationCode !== process.env.NEXT_PUBLIC_PRIVATE_SIGNUP_CODE) {
+        setError('Invalid registration code.');
+        return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -118,6 +125,12 @@ export default function SignupPage() {
                 </SelectContent>
               </Select>
             </div>
+            {(role === 'Instructor' || role === 'Manager') && (
+                <div className="grid gap-2">
+                    <Label htmlFor="registrationCode">Registration Code</Label>
+                    <Input id="registrationCode" type="text" placeholder="Enter admin-provided code" required value={registrationCode} onChange={(e) => setRegistrationCode(e.target.value)} />
+                </div>
+            )}
             {error && <p className="text-destructive text-sm">{error}</p>}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
