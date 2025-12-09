@@ -1,14 +1,21 @@
+'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Calendar, Heart, Users, DollarSign } from "lucide-react"
-import { lessons, horses, instructors } from "@/lib/data"
+import { useCollection } from "@/firebase";
+import { Lesson, Horse, Instructor } from "@/lib/types";
+import { collection, getFirestore } from "firebase/firestore";
 
 export default function AdminDashboardPage() {
+  const { data: lessons, loading: lessonsLoading } = useCollection<Lesson>(collection(getFirestore(), 'lessons'));
+  const { data: horses, loading: horsesLoading } = useCollection<Horse>(collection(getFirestore(), 'horses'));
+  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+
   const stats = [
-    { title: "Total Bookings", value: lessons.length, icon: Calendar, color: "text-blue-500" },
+    { title: "Total Bookings", value: lessonsLoading ? '...' : lessons?.length, icon: Calendar, color: "text-blue-500" },
     { title: "Revenue (Today)", value: "$450", icon: DollarSign, color: "text-green-500" },
-    { title: "Available Horses", value: horses.length, icon: Heart, color: "text-orange-500" },
-    { title: "Active Instructors", value: instructors.length, icon: Users, color: "text-purple-500" },
+    { title: "Available Horses", value: horsesLoading ? '...' : horses?.length, icon: Heart, color: "text-orange-500" },
+    { title: "Active Instructors", value: instructorsLoading ? '...' : instructors?.length, icon: Users, color: "text-purple-500" },
   ]
 
   return (

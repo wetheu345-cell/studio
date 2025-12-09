@@ -1,15 +1,21 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HorseCard } from '@/components/horse-card';
-import { instructors } from '@/lib/data';
 import { InstructorCard } from '@/components/instructor-card';
+import { useCollection } from '@/firebase';
+import { Horse, Instructor } from '@/lib/types';
+import { collection, getFirestore } from 'firebase/firestore';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
+  const { data: horses } = useCollection<Horse>(collection(getFirestore(), 'horses'));
+  const { data: instructors } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -99,12 +105,12 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Meet Our Gentle Giants</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed font-body">
-              Our 16 horses are the heart of our program. Each has a unique personality and is trained to work with riders of all abilities.
+              Our horses are the heart of our program. Each has a unique personality and is trained to work with riders of all abilities.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {PlaceHolderImages.filter(p => p.type === 'horse').slice(0, 4).map((horse) => (
-              <HorseCard key={horse.id} horse={{...horse, name: horse.name || "Horse Name", breed: horse.breed || "Breed"}} />
+            {horses?.slice(0, 4).map((horse) => (
+              <HorseCard key={horse.id} horse={horse} />
             ))}
           </div>
           <div className="text-center mt-12">
@@ -124,7 +130,7 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {instructors.slice(0, 4).map((instructor) => (
+            {instructors?.slice(0, 4).map((instructor) => (
               <InstructorCard key={instructor.id} instructor={instructor} />
             ))}
           </div>

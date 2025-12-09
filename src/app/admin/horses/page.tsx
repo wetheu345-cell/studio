@@ -1,13 +1,18 @@
+'use client';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { horses } from "@/lib/data"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useCollection } from "@/firebase"
+import type { Horse } from "@/lib/types";
+import { collection, getFirestore } from "firebase/firestore"
 
 export default function AdminHorsesPage() {
+  const { data: horses, loading } = useCollection<Horse>(collection(getFirestore(), 'horses'));
+
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
@@ -31,7 +36,16 @@ export default function AdminHorsesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {horses.map((horse) => (
+              {loading && Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">Loading...</TableCell>
+                  <TableCell>Loading...</TableCell>
+                  <TableCell>...</TableCell>
+                  <TableCell>...</TableCell>
+                  <TableCell>...</TableCell>
+                </TableRow>
+              ))}
+              {horses?.map((horse) => (
                 <TableRow key={horse.id}>
                   <TableCell className="font-medium">{horse.name}</TableCell>
                   <TableCell>{horse.breed}</TableCell>

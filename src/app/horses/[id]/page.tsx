@@ -1,13 +1,34 @@
-import { horses } from "@/lib/data"
+'use client';
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { useDoc } from "@/firebase";
+import { doc, getFirestore } from "firebase/firestore";
+import { Horse } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HorseProfilePage({ params }: { params: { id: string } }) {
-  const horse = horses.find((h) => h.id === params.id)
+  const { data: horse, loading } = useDoc<Horse>(doc(getFirestore(), 'horses', params.id));
+
+  if (loading) {
+    return (
+        <div className="container py-12 md:py-16">
+            <Skeleton className="h-8 w-48 mb-8" />
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                <Skeleton className="aspect-square md:aspect-auto h-full min-h-[300px] md:min-h-[500px] rounded-lg" />
+                <div className="flex flex-col justify-center space-y-4">
+                    <Skeleton className="h-12 w-3/4" />
+                    <Skeleton className="h-6 w-1/2" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-10 w-48" />
+                </div>
+            </div>
+        </div>
+    )
+  }
 
   if (!horse) {
     notFound()
@@ -53,10 +74,3 @@ export default function HorseProfilePage({ params }: { params: { id: string } })
     </div>
   )
 }
-
-// Generate static paths for all horses
-export async function generateStaticParams() {
-    return horses.map((horse) => ({
-      id: horse.id,
-    }))
-  }

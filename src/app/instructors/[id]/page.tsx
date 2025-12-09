@@ -1,12 +1,36 @@
-import { instructors } from "@/lib/data"
+'use client';
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Star } from "lucide-react"
+import { useDoc } from "@/firebase";
+import { doc, getFirestore } from "firebase/firestore";
+import { Instructor } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InstructorProfilePage({ params }: { params: { id: string } }) {
-  const instructor = instructors.find((i) => i.id === params.id)
+  const { data: instructor, loading } = useDoc<Instructor>(doc(getFirestore(), 'instructors', params.id));
+
+  if (loading) {
+    return (
+        <div className="container py-12 md:py-16">
+             <Skeleton className="h-8 w-48 mb-8" />
+             <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+                <div className="md:col-span-1 flex flex-col items-center space-y-4">
+                    <Skeleton className="aspect-square w-full max-w-[300px] rounded-full" />
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-6 w-32" />
+                </div>
+                <div className="md:col-span-2 flex flex-col justify-center space-y-4">
+                    <Skeleton className="h-10 w-1/2" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-12 w-56" />
+                </div>
+             </div>
+        </div>
+    )
+  }
 
   if (!instructor) {
     notFound()
@@ -57,11 +81,4 @@ export default function InstructorProfilePage({ params }: { params: { id: string
       </div>
     </div>
   )
-}
-
-// Generate static paths for all instructors
-export async function generateStaticParams() {
-  return instructors.map((instructor) => ({
-    id: instructor.id,
-  }))
 }

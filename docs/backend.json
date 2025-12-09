@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile in the system.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Horse": {
+      "title": "Horse",
+      "description": "Represents a horse available for lessons.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "breed": {
+          "type": "string"
+        },
+        "age": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string"
+        },
+        "suitability": {
+          "type": "string",
+          "enum": ["Beginner", "Intermediate", "Advanced", "Therapy"]
+        }
+      },
+      "required": ["name", "breed", "age", "description", "imageUrl", "suitability"]
+    },
+    "Instructor": {
+      "title": "Instructor",
+      "description": "Represents a riding instructor.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "specialty": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "specialty", "bio", "imageUrl"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "Represents a booked lesson.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Regular", "Therapy"]
+        },
+        "instructorId": {
+          "type": "string"
+        },
+        "horseId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "time": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed", "Pending", "Cancelled"]
+        }
+      },
+      "required": ["userId", "type", "instructorId", "horseId", "date", "time", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous", "google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public-facing user profile information."
+    },
+    "/horses": {
+        "schema": {
+            "$ref": "#/entities/Horse"
+        },
+        "description": "Collection of all horses."
+    },
+    "/instructors": {
+        "schema": {
+            "$ref": "#/entities/Instructor"
+        },
+        "description": "Collection of all instructors."
+    },
+    "/lessons": {
+        "schema": {
+            "$ref": "#/entities/Lesson"
+        },
+        "description": "Collection of all lessons."
+    },
+    "/users/{userId}/lessons": {
+        "schema": {
+            "$ref": "#/entities/Lesson"
+        },
+        "description": "Sub-collection of lessons for a specific user."
+    }
+  }
+}

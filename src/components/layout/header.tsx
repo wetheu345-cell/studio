@@ -2,22 +2,32 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu } from 'lucide-react';
+import { Menu, User, LogOut } from 'lucide-react';
+import { signOut, Auth } from 'firebase/auth';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/icons';
+import { useUser, useAuth } from '@/firebase';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 export function Header() {
   const pathname = usePathname();
+  const { user, loading } = useUser();
+  const auth = useAuth() as Auth;
 
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/horses', label: 'Horses' },
     { href: '/instructors', label: 'Instructors' },
-    { href: '/admin', label: 'Admin' },
+    ...(user ? [{ href: '/admin', label: 'Admin' }] : []),
   ];
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,10 +85,37 @@ export function Header() {
           <div className="w-full flex-1 md:w-auto md:flex-none">
              {/* Can add a search bar here if needed */}
           </div>
-          <nav className="flex items-center">
+          <nav className="flex items-center gap-4">
+            {!loading && !user && (
+                <Button variant="ghost" asChild>
+                    <Link href="/login">Log in</Link>
+                </Button>
+            )}
             <Button asChild>
               <Link href="/booking">Book Now</Link>
             </Button>
+
+            {user && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger>
+                        <Avatar>
+                            <AvatarImage src={user.photoURL || ''} />
+                            <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/account"><User className="mr-2" /> Profile</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2" />
+                            Log out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
           </nav>
         </div>
       </div>

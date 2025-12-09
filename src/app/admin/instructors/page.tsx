@@ -1,13 +1,18 @@
+'use client';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { instructors } from "@/lib/data"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useCollection } from "@/firebase";
+import { Instructor } from "@/lib/types";
+import { collection, getFirestore } from "firebase/firestore";
 
 export default function AdminInstructorsPage() {
+  const { data: instructors, loading } = useCollection<Instructor>(collection(getFirestore(), 'instructors'));
+
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between">
@@ -29,7 +34,21 @@ export default function AdminInstructorsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {instructors.map((instructor) => (
+              {loading && Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback>...</AvatarFallback>
+                      </Avatar>
+                      Loading...
+                    </div>
+                  </TableCell>
+                  <TableCell>Loading...</TableCell>
+                  <TableCell>...</TableCell>
+                </TableRow>
+              ))}
+              {instructors?.map((instructor) => (
                 <TableRow key={instructor.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">

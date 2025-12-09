@@ -1,12 +1,17 @@
+'use client';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { Calendar } from "@/components/ui/calendar"
-import { lessons } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { useCollection } from "@/firebase";
+import { Lesson } from "@/lib/types";
+import { collection, getFirestore } from "firebase/firestore";
 
 export default function AdminSchedulePage() {
+  const { data: lessons, loading } = useCollection<Lesson>(collection(getFirestore(), 'lessons'));
+
   return (
     <div className="p-4 md:p-8 grid gap-8 md:grid-cols-3">
       <div className="md:col-span-2">
@@ -44,10 +49,11 @@ export default function AdminSchedulePage() {
       <div className="md:col-span-1">
         <PageHeader title="Upcoming" className="text-left" />
         <div className="mt-8 space-y-4">
-            {lessons.map(lesson => (
+            {loading && <p>Loading...</p>}
+            {lessons?.map(lesson => (
                 <Card key={lesson.id} className="p-4 flex items-center justify-between">
                     <div>
-                        <p className="font-bold">{lesson.userName}</p>
+                        <p className="font-bold">{lesson.userId}</p>
                         <p className="text-sm text-muted-foreground">{lesson.time} - {lesson.type} Lesson</p>
                     </div>
                     <Badge variant={lesson.status === 'Confirmed' ? 'default' : 'secondary'}>{lesson.status}</Badge>

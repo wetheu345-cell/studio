@@ -1,8 +1,11 @@
+'use client';
 import { Facebook, Twitter, Instagram } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Link from 'next/link';
+import { useUser } from '@/firebase';
 
 export function Footer() {
+    const { user } = useUser();
   return (
     <footer className="border-t py-10">
       <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -19,7 +22,11 @@ export function Footer() {
                     <li><Link href="/booking" className="text-muted-foreground hover:text-primary">Booking</Link></li>
                     <li><Link href="/horses" className="text-muted-foreground hover:text-primary">Our Horses</Link></li>
                     <li><Link href="/instructors" className="text-muted-foreground hover:text-primary">Instructors</Link></li>
-                    <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin Login</Link></li>
+                    {user ? (
+                        <li><Link href="/admin" className="text-muted-foreground hover:text-primary">Admin</Link></li>
+                    ) : (
+                        <li><Link href="/login" className="text-muted-foreground hover:text-primary">Admin Login</Link></li>
+                    )}
                 </ul>
             </div>
              <div className="space-y-2">
