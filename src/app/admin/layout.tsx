@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { Logo } from "@/components/icons";
+import { Header } from "@/components/layout/header";
 
 export default function AdminLayout({
   children,
@@ -59,6 +60,7 @@ export default function AdminLayout({
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
+        <Header />
         {children}
       </SidebarInset>
     </SidebarProvider>

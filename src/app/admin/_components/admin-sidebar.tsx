@@ -10,6 +10,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarTrigger,
+  SidebarRail,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
 import { Calendar, Heart, Users, LayoutDashboard, LogOut, Settings, ClipboardList, Clock, Building, MessageSquare } from "lucide-react"
@@ -29,13 +30,14 @@ export function AdminSidebar() {
     { href: "/admin/rentals", label: "Museum Rentals", icon: Building },
   ]
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <div className="flex items-center justify-between">
-            <Logo className="h-7 w-auto" />
-            <SidebarTrigger />
-        </div>
-      </SidebarHeader>
+    <Sidebar collapsible="icon" variant="floating">
+        <SidebarRail />
+        <SidebarHeader>
+            <div className="flex items-center justify-between">
+                <Logo className="h-7 w-auto" />
+                <SidebarTrigger />
+            </div>
+        </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           {navItems.map((item) => (

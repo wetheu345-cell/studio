@@ -1,9 +1,9 @@
 
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
-import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase'
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError, useMemoFirebase } from '@/firebase'
 import { PageHeader } from '@/components/page-header'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -17,8 +17,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Phone } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import type { Availability } from '@/lib/types'
-import { format, startOfWeek } from 'date-fns'
+import type { Availability, Lesson } from '@/lib/types'
+import { format, startOfWeek, isSameDay } from 'date-fns'
 
 export default function BookingSchedulePage() {
   const router = useRouter()
@@ -33,55 +33,106 @@ export default function BookingSchedulePage() {
   const [isLoadingTimes, setIsLoadingTimes] = useState(false)
 
   const instructorId = searchParams.get('instructorId')
+  const horseId = searchParams.get('horseId')
 
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (!firestore || !date || !instructorId) {
+      if (!firestore || !date || !instructorId || !horseId) {
         setAvailableTimes([]);
         return;
       }
       
       setIsLoadingTimes(true);
-      setTime(undefined); // Reset selected time when date changes
+      setTime(undefined);
 
       try {
         const weekStart = startOfWeek(date);
         const weekStartDateStr = format(weekStart, 'yyyy-MM-dd');
         const selectedDateStr = format(date, 'yyyy-MM-dd');
         
-        const q = query(
+        // 1. Fetch instructor's general availability for the week
+        const availabilityQuery = query(
           collection(firestore, 'availability'),
           where('instructorId', '==', instructorId),
           where('weekStartDate', '==', weekStartDateStr)
         );
-
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
+        const availabilitySnapshot = await getDocs(availabilityQuery);
+        
+        if (availabilitySnapshot.empty) {
           setAvailableTimes([]);
+          setIsLoadingTimes(false);
           return;
         }
 
-        const availabilityDoc = querySnapshot.docs[0].data() as Availability;
-        const slotsForDay = availabilityDoc.timeSlots
+        const availabilityDoc = availabilitySnapshot.docs[0].data() as Availability;
+        const allSlotsForDay = availabilityDoc.timeSlots
           .filter(slot => slot.date === selectedDateStr)
           .flatMap(slot => {
               const start = parseInt(slot.startTime.split(':')[0]);
               const end = parseInt(slot.endTime.split(':')[0]);
               const times = [];
-              for (let i = start; i < end; i++) {
-                  times.push(`${String(i).padStart(2, '0')}:00`);
-                  times.push(`${String(i).padStart(2, '0')}:30`);
+              for (let h = start; h < end; h++) {
+                  times.push(`${String(h).padStart(2, '0')}:00`);
+                  times.push(`${String(h).padStart(2, '0')}:30`);
               }
-              // Don't include the end time itself unless it's on the hour
-              if(slot.endTime.split(':')[1] === '00') {
-                  return times;
-              } else {
-                  return times.slice(0, -1);
+               if(slot.endTime.split(':')[1] === '30') {
+                  times.push(`${String(end).padStart(2, '0')}:00`);
               }
+              return times;
           })
           .sort((a,b) => a.localeCompare(b));
+
+        // 2. Fetch existing lessons for the instructor and horse on the selected day
+        const instructorLessonsQuery = query(
+          collection(firestore, 'lessons'), 
+          where('instructorId', '==', instructorId),
+          where('date', '>=', date.toISOString().split('T')[0]),
+          where('date', '<', new Date(date.getTime() + 86400000).toISOString().split('T')[0])
+        );
+        const horseLessonsQuery = query(
+          collection(firestore, 'lessons'), 
+          where('horseId', '==', horseId),
+          where('date', '>=', date.toISOString().split('T')[0]),
+          where('date', '<', new Date(date.getTime() + 86400000).toISOString().split('T')[0])
+        );
+
+        const [instructorLessonsSnapshot, horseLessonsSnapshot] = await Promise.all([
+          getDocs(instructorLessonsQuery),
+          getDocs(horseLessonsQuery)
+        ]);
         
-        setAvailableTimes(slotsForDay);
+        const bookedTimes = new Set<string>();
+        
+        instructorLessonsSnapshot.forEach(doc => {
+            const lesson = doc.data() as Lesson;
+            if (isSameDay(new Date(lesson.date), date)) {
+                 bookedTimes.add(lesson.time);
+                 // Assuming lessons are 1 hour, block the next slot too
+                 const [hour, minute] = lesson.time.split(':').map(Number);
+                 if (minute === 0) {
+                     bookedTimes.add(`${String(hour).padStart(2, '0')}:30`);
+                 } else {
+                     bookedTimes.add(`${String(hour + 1).padStart(2, '0')}:00`);
+                 }
+            }
+        });
+        horseLessonsSnapshot.forEach(doc => {
+            const lesson = doc.data() as Lesson;
+            if (isSameDay(new Date(lesson.date), date)) {
+                 bookedTimes.add(lesson.time);
+                 const [hour, minute] = lesson.time.split(':').map(Number);
+                 if (minute === 0) {
+                     bookedTimes.add(`${String(hour).padStart(2, '0')}:30`);
+                 } else {
+                     bookedTimes.add(`${String(hour + 1).padStart(2, '0')}:00`);
+                 }
+            }
+        });
+
+        // 3. Filter out booked slots
+        const trulyAvailableTimes = allSlotsForDay.filter(slot => !bookedTimes.has(slot));
+        
+        setAvailableTimes(trulyAvailableTimes);
 
       } catch (error) {
         console.error("Error fetching availability:", error);
@@ -93,7 +144,7 @@ export default function BookingSchedulePage() {
     };
 
     fetchAvailability();
-  }, [date, instructorId, firestore, toast]);
+  }, [date, instructorId, horseId, firestore, toast]);
 
 
   const handleNext = async () => {
@@ -118,14 +169,14 @@ export default function BookingSchedulePage() {
     }
 
     const collectionRef = collection(firestore, 'lessons');
-    try {
-        const docRef = await addDoc(collectionRef, lessonData)
+    addDoc(collectionRef, lessonData)
+      .then((docRef) => {
         const params = new URLSearchParams(searchParams.toString())
         params.set('date', date.toISOString())
         params.set('time', time)
         params.set('lessonId', docRef.id)
         router.push(`/booking/confirm?${params.toString()}`)
-    } catch (error) {
+      }).catch(error => {
          errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
@@ -134,7 +185,7 @@ export default function BookingSchedulePage() {
             requestResourceData: lessonData
           })
         );
-    }
+    });
   }
 
   return (
