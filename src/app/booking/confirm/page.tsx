@@ -1,5 +1,5 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useDoc, useFirestore } from '@/firebase'
@@ -8,10 +8,10 @@ import type { Horse, Instructor } from '@/lib/types'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Horse as HorseIcon, User, Calendar, Clock } from 'lucide-react'
+import { CheckCircle, Heart as HorseIcon, User, Calendar, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export default function BookingConfirmPage() {
+function BookingConfirmationContent() {
   const searchParams = useSearchParams()
   const firestore = useFirestore()
 
@@ -79,5 +79,14 @@ export default function BookingConfirmPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+
+export default function BookingConfirmPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingConfirmationContent />
+    </Suspense>
   )
 }
