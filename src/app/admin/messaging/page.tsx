@@ -69,7 +69,6 @@ export default function MessagingPage() {
       <PageHeader
         title="Team Chat"
         description="Real-time messaging for instructors and managers."
-        className="text-left px-0"
       />
       <Card className="mt-8 flex-1 flex flex-col">
         <CardContent className="pt-6 flex-1 flex flex-col">

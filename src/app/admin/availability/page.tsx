@@ -136,7 +136,6 @@ export default function AvailabilityPage() {
       <PageHeader
         title="My Availability"
         description="Set your available hours for the upcoming week so clients can book lessons with you."
-        className="text-left px-0"
       />
 
       <div className="mt-8 grid md:grid-cols-2 gap-8 items-start">

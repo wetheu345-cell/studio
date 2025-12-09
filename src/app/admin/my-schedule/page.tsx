@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SelectHorseDialog } from './_components/select-horse-dialog';
-import { isAfter, addHours } from 'date-fns';
+import { isAfter, addHours, format } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,7 +80,7 @@ export default function MySchedulePage() {
 
   return (
     <div className="p-4 md:p-8">
-      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." className="text-left px-0" />
+      <PageHeader title="My Schedule" description="View and manage your upcoming lessons." />
 
       <Card className="mt-8">
         <CardContent className="pt-6">
@@ -104,7 +104,7 @@ export default function MySchedulePage() {
               {lessons?.map((lesson) => (
                 <TableRow key={lesson.id} className={lesson.status === 'Cancelled' ? 'text-muted-foreground' : ''}>
                   <TableCell>{lesson.userName}</TableCell>
-                  <TableCell>{new Date(lesson.date).toLocaleDateString()} - {lesson.time}</TableCell>
+                  <TableCell>{format(new Date(lesson.date), 'PPP')} - {lesson.time}</TableCell>
                   <TableCell>{lesson.type}</TableCell>
                   <TableCell>
                     <Badge variant={lesson.status === 'Confirmed' ? 'default' : (lesson.status === 'Cancelled' ? 'destructive' : 'secondary')}>
@@ -148,7 +148,7 @@ export default function MySchedulePage() {
                 <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This action cannot be undone. This will mark the lesson for {lessonToCancel.userName} on {new Date(lessonToCancel.date).toLocaleDateString()} at {lessonToCancel.time} as cancelled.
+                    This action cannot be undone. This will mark the lesson for {lessonToCancel.userName} on {format(new Date(lessonToCancel.date), 'PPP')} at {lessonToCancel.time} as cancelled.
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

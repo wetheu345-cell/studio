@@ -1,4 +1,3 @@
-
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
@@ -31,7 +30,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <PageHeader title="Admin Dashboard" description="Welcome back! Here's a summary of your operations." className="text-left" />
+      <PageHeader title="Admin Dashboard" description="Welcome back! Here's a summary of your operations." />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
