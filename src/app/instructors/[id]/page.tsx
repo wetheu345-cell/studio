@@ -4,13 +4,17 @@ import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Star } from "lucide-react"
-import { useDoc } from "@/firebase";
-import { doc, getFirestore } from "firebase/firestore";
-import { Instructor } from "@/lib/types";
+import { useDoc, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
+import type { Instructor } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
 
 export default function InstructorProfilePage({ params }: { params: { id: string } }) {
-  const { data: instructor, loading } = useDoc<Instructor>(doc(getFirestore(), 'instructors', params.id));
+  const firestore = useFirestore();
+  const instructorRef = useMemo(() => firestore ? doc(firestore, 'instructors', params.id) : null, [firestore, params.id]);
+  const { data: instructor, loading } = useDoc<Instructor>(instructorRef);
+
 
   if (loading) {
     return (
@@ -74,7 +78,7 @@ export default function InstructorProfilePage({ params }: { params: { id: string
           </div>
           <div className="mt-8">
             <Button size="lg" asChild>
-              <Link href={`/booking?instructorId=${instructor.id}`}>Book a lesson with {instructor.name.split(' ')[0]}</Link>
+              <Link href={`/booking/details?instructorId=${instructor.id}`}>Book a lesson with {instructor.name.split(' ')[0]}</Link>
             </Button>
           </div>
         </div>

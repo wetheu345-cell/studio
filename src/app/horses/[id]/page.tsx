@@ -5,13 +5,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { useDoc } from "@/firebase";
-import { doc, getFirestore } from "firebase/firestore";
-import { Horse } from "@/lib/types";
+import { useDoc, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
+import type { Horse } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
 
 export default function HorseProfilePage({ params }: { params: { id: string } }) {
-  const { data: horse, loading } = useDoc<Horse>(doc(getFirestore(), 'horses', params.id));
+  const firestore = useFirestore();
+  const horseRef = useMemo(() => firestore ? doc(firestore, 'horses', params.id) : null, [firestore, params.id]);
+  const { data: horse, loading } = useDoc<Horse>(horseRef);
 
   if (loading) {
     return (
@@ -66,7 +69,7 @@ export default function HorseProfilePage({ params }: { params: { id: string } })
 
           <div className="mt-8">
             <Button size="lg" asChild>
-              <Link href={`/booking?horseId=${horse.id}`}>Book a lesson with {horse.name}</Link>
+              <Link href={`/booking/details?horseId=${horse.id}`}>Book a lesson with {horse.name}</Link>
             </Button>
           </div>
         </div>

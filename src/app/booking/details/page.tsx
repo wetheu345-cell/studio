@@ -32,15 +32,15 @@ export default function BookingDetailsPage() {
   const [selectedHorseId, setSelectedHorseId] = useState<string | undefined>(horseIdParam)
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | undefined>(instructorIdParam)
 
-  const { data: horses, loading: horsesLoading } = useCollection<Horse>(
-    useMemo(() => collection(firestore, 'horses'), [firestore])
-  )
-  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(
-    useMemo(() => collection(firestore, 'instructors'), [firestore])
-  )
+  const horsesCollection = useMemo(() => firestore ? collection(firestore, 'horses') : null, [firestore]);
+  const instructorsCollection = useMemo(() => firestore ? collection(firestore, 'instructors') : null, [firestore]);
+
+  const { data: horses, loading: horsesLoading } = useCollection<Horse>(horsesCollection);
+  const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
+
 
   const handleNext = () => {
-    const params = new URLSearchParams(searchParams)
+    const params = new URLSearchParams(searchParams.toString())
     if (selectedHorseId) params.set('horseId', selectedHorseId)
     if (selectedInstructorId) params.set('instructorId', selectedInstructorId)
     router.push(`/booking/schedule?${params.toString()}`)
@@ -87,7 +87,7 @@ export default function BookingDetailsPage() {
                         <CheckCircle className="h-5 w-5 text-accent-foreground" />
                     </div>
                 )}
-                <div className="aspect-w-1 aspect-h-1 w-full">
+                <div className="relative aspect-w-1 aspect-h-1 w-full h-48">
                    <Image src={horse.imageUrl} alt={horse.name} fill className="object-cover" />
                 </div>
                 <CardContent className="p-3">
@@ -123,7 +123,7 @@ export default function BookingDetailsPage() {
                             <CheckCircle className="h-5 w-5 text-accent-foreground" />
                         </div>
                     )}
-                    <div className="aspect-w-1 aspect-h-1 w-full">
+                    <div className="relative aspect-w-1 aspect-h-1 w-full h-48">
                         <Image src={instructor.imageUrl} alt={instructor.name} fill className="object-cover" />
                     </div>
                     <CardContent className="p-3">
