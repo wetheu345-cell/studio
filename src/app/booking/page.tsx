@@ -6,11 +6,11 @@ import { ArrowRight, FileText, DollarSign, Users, Calendar, Building } from 'luc
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
-export default function BookingPage({
-  searchParams,
-}: {
+type PageProps = {
   searchParams?: { [key: string]: string | string[] | undefined }
-}) {
+}
+
+export default function BookingPage({ searchParams }: PageProps) {
   const type = searchParams?.type
   const registrationFormUrl = "https://static1.squarespace.com/static/60f9964e5087f364fd204293/t/614383141a64b1606d163ee6/1631814421172/2021+Public+Riding+Lesson+Registration.pdf"
 
