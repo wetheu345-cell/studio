@@ -1,150 +1,296 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Represents a user's profile in the system.",
+    "Lesson": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Lesson",
       "type": "object",
+      "description": "Represents a horse riding lesson.",
       "properties": {
-        "displayName": {
+        "id": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "Unique identifier for the Lesson entity."
         },
-        "email": {
+        "lessonType": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
+          "description": "Type of lesson: 'therapy' or 'regular'.",
+          "format": "string"
+        },
+        "instructorId": {
+          "type": "string",
+          "description": "Reference to Instructor. (Relationship: Instructor 1:N Lesson)"
+        },
+        "horseId": {
+          "type": "string",
+          "description": "Reference to Horse. (Relationship: Horse 1:N Lesson)"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Lesson)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the lesson.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the lesson.",
+          "format": "date-time"
+        },
+        "paymentId": {
+          "type": "string",
+          "description": "Reference to Payment. (Relationship: Payment 1:1 Lesson)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes from the Instructor after the lesson."
         }
       },
-      "required": ["displayName", "email"]
+      "required": [
+        "id",
+        "lessonType",
+        "instructorId",
+        "horseId",
+        "customerId",
+        "startTime",
+        "endTime",
+        "paymentId"
+      ]
+    },
+    "Instructor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Instructor",
+      "type": "object",
+      "description": "Represents an instructor.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Instructor entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the instructor."
+        },
+        "expertise": {
+          "type": "string",
+          "description": "Area of expertise of the instructor."
+        },
+        "availability": {
+          "type": "string",
+          "description": "Availability schedule of the instructor."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "The instructors contact number."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "expertise",
+        "availability"
+      ]
     },
     "Horse": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Horse",
-      "description": "Represents a horse available for lessons.",
       "type": "object",
+      "description": "Represents a horse.",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Horse entity."
+        },
         "name": {
-          "type": "string"
-        },
-        "breed": {
-          "type": "string"
-        },
-        "age": {
-          "type": "number"
+          "type": "string",
+          "description": "Name of the horse."
         },
         "description": {
-          "type": "string"
-        },
-        "imageUrl": {
           "type": "string",
-          "format": "uri"
-        },
-        "imageHint": {
-          "type": "string"
+          "description": "Description of the horse."
         },
         "suitability": {
           "type": "string",
-          "enum": ["Beginner", "Intermediate", "Advanced", "Therapy"]
+          "description": "Suitability of the horse for different lesson types."
+        },
+        "availability": {
+          "type": "string",
+          "description": "Availability schedule of the horse."
+        },
+        "healthStatus": {
+          "type": "string",
+          "description": "The health status of the horse."
         }
       },
-      "required": ["name", "breed", "age", "description", "imageUrl", "suitability"]
+      "required": [
+        "id",
+        "name",
+        "description",
+        "suitability",
+        "availability"
+      ]
     },
-    "Instructor": {
-      "title": "Instructor",
-      "description": "Represents a riding instructor.",
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
       "type": "object",
+      "description": "Represents a customer.",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Customer entity."
+        },
         "name": {
-          "type": "string"
-        },
-        "specialty": {
-          "type": "string"
-        },
-        "bio": {
-          "type": "string"
-        },
-        "imageUrl": {
           "type": "string",
-          "format": "uri"
+          "description": "Name of the customer."
         },
-        "imageHint": {
-          "type": "string"
-        },
-        "userId": {
+        "email": {
           "type": "string",
-          "description": "The corresponding Firebase Auth user ID."
+          "description": "Email address of the customer.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number of the customer."
         }
       },
-      "required": ["name", "specialty", "bio", "imageUrl"]
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phoneNumber"
+      ]
     },
-    "Lesson": {
-      "title": "Lesson",
-      "description": "Represents a booked lesson.",
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
       "type": "object",
+      "description": "Represents a payment.",
       "properties": {
-        "userId": {
-          "type": "string"
-        },
-        "userName": {
-          "type": "string"
-        },
-        "type": {
+        "id": {
           "type": "string",
-          "enum": ["Regular", "Therapy"]
+          "description": "Unique identifier for the Payment entity."
         },
-        "instructorId": {
-          "type": "string"
+        "amount": {
+          "type": "number",
+          "description": "Amount paid."
         },
-        "horseId": {
-          "type": "string"
-        },
-        "date": {
+        "paymentDate": {
           "type": "string",
+          "description": "Date of the payment.",
           "format": "date-time"
         },
-        "time": {
-          "type": "string"
-        },
-        "status": {
+        "paymentMethod": {
           "type": "string",
-          "enum": ["Confirmed", "Pending", "Cancelled"]
+          "description": "Payment method used."
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Transaction ID."
         }
       },
-      "required": ["userId", "userName", "type", "instructorId", "date", "time", "status"]
+      "required": [
+        "id",
+        "amount",
+        "paymentDate",
+        "paymentMethod",
+        "transactionId"
+      ]
     }
   },
   "auth": {
-    "providers": ["anonymous", "google.com", "password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/UserProfile"
+    "structure": [
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer profiles.  Customer can only read/write their own profile data. Admin can read all.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for the customer."
+            }
+          ]
+        }
       },
-      "description": "Stores public-facing user profile information."
-    },
-    "/horses": {
-        "schema": {
-            "$ref": "#/entities/Horse"
-        },
-        "description": "Collection of all horses."
-    },
-    "/instructors": {
-        "schema": {
-            "$ref": "#/entities/Instructor"
-        },
-        "description": "Collection of all instructors."
-    },
-    "/lessons": {
-        "schema": {
-            "$ref": "#/entities/Lesson"
-        },
-        "description": "Collection of all lessons."
-    },
-    "/users/{userId}/lessons": {
-        "schema": {
-            "$ref": "#/entities/Lesson"
-        },
-        "description": "Sub-collection of lessons for a specific user."
-    }
+      {
+        "path": "/customers/{customerId}/lessons/{lessonId}",
+        "definition": {
+          "entityName": "Lesson",
+          "schema": {
+            "$ref": "#/backend/entities/Lesson"
+          },
+          "description": "Stores lessons associated with a specific customer. The customer can read/write their own lessons. Admin can read all.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for the customer."
+            },
+            {
+              "name": "lessonId",
+              "description": "The unique identifier for the lesson."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/instructors/{instructorId}",
+        "definition": {
+          "entityName": "Instructor",
+          "schema": {
+            "$ref": "#/backend/entities/Instructor"
+          },
+          "description": "Stores instructor profiles. Admin can read/write all instructor data.",
+          "params": [
+            {
+              "name": "instructorId",
+              "description": "The unique identifier for the instructor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/horses/{horseId}",
+        "definition": {
+          "entityName": "Horse",
+          "schema": {
+            "$ref": "#/backend/entities/Horse"
+          },
+          "description": "Stores horse profiles. Admin can read/write all horse data.",
+          "params": [
+            {
+              "name": "horseId",
+              "description": "The unique identifier for the horse."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information.  Payments could also live as a subcollection of lessons for clarity.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the EHW Lessons application, focusing on scheduling horse riding lessons (therapy and regular), managing instructors and horses, and processing payments. The structure emphasizes security, scalability, and debuggability, adhering to the core design principles.\n\n**Authorization Independence:** Achieved through path-based ownership for user-related data (lessons). Collaborative data (if any) would utilize membership maps. For example, lessons are stored under the customer's ID, making ownership clear and rules simple.\n\n**Structural Segregation:** Different data types (lessons, instructors, horses, customers, payments) are stored in separate collections, ensuring that each collection has a homogeneous security posture.\n\n**Access Modeling:**\n*   Private Data: Lessons are organized under each Customer (`/customers/{customerId}/lessons/{lessonId}`), ensuring that only the customer and authorized personnel (e.g., admins) can access their lesson data. This enforces clear ownership.\n*   Collaborative Data: Not explicitly defined in the requirements, but if needed, a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) could be added to relevant documents to manage access.\n*   Global Roles:  Admin roles, if needed, would be managed via a dedicated collection (e.g., `/roles_admin/{uid}`), checked for existence in the security rules.\n\n**QAPs (Rules are not Filters):** The segregation of data into different collections based on access requirements ensures that list operations are secure. Path-based ownership of lessons guarantees that listing lessons under a customer ID only returns lessons belonging to that customer.\n\nThe design ensures atomic operations by avoiding hierarchical authorization dependencies. The denormalization strategy, applied where necessary (e.g., copying relevant user data into subcollections), further enhances authorization independence and simplifies security rules."
   }
 }

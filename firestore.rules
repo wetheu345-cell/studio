@@ -1,0 +1,207 @@
+/**
+ * Core Philosophy:
+ * This ruleset enforces a strict security model based on user ownership and global administrative roles.
+ * Customer data is private and can only be accessed by the owning user or an administrator. Core business
+ * data like instructors and horses are managed exclusively by administrators.
+ *
+ * Data Structure:
+ * Customer data, including their personal information and lessons, is nested under a user-specific path:
+ * /customers/{customerId}/... This path-based ownership makes security rules simple and performant.
+ * Global data, such as instructors, horses, and payments, are stored in top-level collections.
+ *
+ * Key Security Decisions:
+ * - Admin Roles: A global admin role is implemented by checking for a user's UID in the `/admins/{userId}`
+ *   collection. This provides a centralized and clear way to manage administrative privileges.
+ * - Customer Privacy: Customers can only access their own documents within the `/customers/{customerId}` path.
+ *   Listing all customers is explicitly disallowed to prevent user data scraping.
+ * - Admin-Managed Collections: The /instructors, /horses, and /payments collections are strictly controlled
+ *   by admins, ensuring that only authorized personnel can manage business-critical information.
+ * - Payments Security: The /payments collection is admin-only. Because the Payment entity schema lacks a
+ *   denormalized `ownerId` or `customerId` field, there is no secure way to grant customers access to
+ *   their specific payment documents in a top-level collection without performing insecure queries.
+ *
+ * Denormalization for Authorization:
+ * The ruleset assumes that documents contain fields necessary for authorization. For example, a new Lesson
+ * document created at `/customers/{uid}/lessons/{lessonId}` must contain a `customerId` field that matches
+ * the `{uid}` from the path, ensuring a permanent and verifiable link to the owner.
+ *
+ * Structural Segregation:
+ * The data model correctly segregates user-private data (/customers) from globally managed data
+ * (/instructors, /horses), which allows for distinct and highly secure access controls for each collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the requesting user is a global administrator.
+     * Admin status is granted if a document with the user's UID exists in the /admins collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    /**
+     * Verifies that a document exists before an update or delete operation.
+     * This prevents operations on non-existent documents.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * Combines ownership check with an existence check for state-changing operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && isExistingDoc();
+    }
+
+    /**
+     * On create, validates that the customer document's internal `id` field
+     * matches the document ID, creating a permanent ownership link.
+     */
+    function hasValidCustomerIdOnCreate(customerId) {
+      return request.resource.data.id == customerId;
+    }
+
+    /**
+     * On update, ensures the customer document's internal `id` field is immutable.
+     */
+    function hasImmutableCustomerId() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On create, validates that the lesson's internal `customerId` field
+     * matches the parent customer's ID from the path.
+     */
+    function linksToParentCustomerOnCreate(customerId) {
+      return request.resource.data.customerId == customerId;
+    }
+    
+    /**
+     * On update, ensures the lesson's internal `customerId` field is immutable,
+     * preventing the lesson from being moved between customers.
+     */
+    function hasImmutableCustomerLink() {
+      return request.resource.data.customerId == resource.data.customerId;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages admin role documents. This collection should be empty or contain
+     *              documents where the ID is the UID of an admin user.
+     *              This collection should ONLY be managed via the Firebase Console.
+     * @path        /admins/{userId}
+     * @allow       (read/write) No client access.
+     * @deny        Any client attempting to read or write to this collection.
+     * @principle   Locks down critical role-management data from all client access.
+     */
+    match /admins/{userId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Customer profiles. Each customer can manage their own profile.
+     *              Admins have read-only access to customer data.
+     * @path        /customers/{customerId}
+     * @allow       (create) A signed-in user creating their own customer profile.
+     * @deny        (list) Any user trying to list all customers in the database.
+     * @principle   Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /customers/{customerId} {
+      allow get: if isOwner(customerId) || isAdmin();
+      allow list: if false;
+      allow create: if isOwner(customerId) && hasValidCustomerIdOnCreate(customerId);
+      allow update: if isExistingOwner(customerId) && hasImmutableCustomerId();
+      allow delete: if isExistingOwner(customerId);
+
+      /**
+       * @description Lessons belonging to a specific customer. Access is inherited from the parent customer.
+       * @path        /customers/{customerId}/lessons/{lessonId}
+       * @allow       (create) A customer creating a lesson for themselves.
+       * @deny        (update) A customer trying to update another customer's lesson.
+       * @principle   Enforces document ownership for all operations via path-based security.
+       */
+      match /lessons/{lessonId} {
+        allow get: if isOwner(customerId) || isAdmin();
+        allow list: if isOwner(customerId) || isAdmin();
+        allow create: if isOwner(customerId) && linksToParentCustomerOnCreate(customerId);
+        allow update: if isExistingOwner(customerId) && hasImmutableCustomerLink();
+        allow delete: if isExistingOwner(customerId);
+      }
+    }
+
+    /**
+     * @description Instructor profiles, managed exclusively by administrators.
+     * @path        /instructors/{instructorId}
+     * @allow       (get, list, create, update, delete) An authenticated admin.
+     * @deny        Any non-admin user attempting to access instructor data.
+     * @principle   Secures business-critical data using a global role-based access control model.
+     */
+    match /instructors/{instructorId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Horse profiles, managed exclusively by administrators.
+     * @path        /horses/{horseId}
+     * @allow       (get, list, create, update, delete) An authenticated admin.
+     * @deny        Any non-admin user attempting to access horse data.
+     * @principle   Secures business-critical data using a global role-based access control model.
+     */
+    match /horses/{horseId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+    
+    /**
+     * @description Payment information, managed exclusively by administrators.
+     * @path        /payments/{paymentId}
+     * @allow       (get, list, create, update, delete) An authenticated admin.
+     * @deny        Any customer attempting to access payment data directly.
+     * @principle   Secures sensitive financial data. Customer access is denied because the data
+     *              schema lacks a denormalized ownerId, making secure access rules impossible.
+     */
+    match /payments/{paymentId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+  }
+}
