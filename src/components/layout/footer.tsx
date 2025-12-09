@@ -48,8 +48,8 @@ export function Footer() {
              <div className="space-y-2">
                 <h4 className="font-headline text-lg tracking-wide">Contact Us</h4>
                 <ul className="space-y-1 text-muted-foreground text-sm">
-                    <li>337 Vine Street</li>
-                    <li>Hartford, CT 06112</li>
+                    <li><Link href="/about#location" className="hover:text-primary">337 Vine Street</Link></li>
+                    <li><Link href="/about#location" className="hover:text-primary">Hartford, CT 06112</Link></li>
                     <li>860-293-2914</li>
                     <li>contact@ebonyhorsewomen.com</li>
                 </ul>

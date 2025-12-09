@@ -1,6 +1,7 @@
+
 'use client';
 import { useMemo, useState } from 'react';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Lesson, Instructor } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -22,14 +23,14 @@ export default function MySchedulePage() {
   const firestore = useFirestore();
   const [selectedLesson, setSelectedLesson] = useState<(Lesson & { id: string }) | null>(null);
 
-  const instructorsCollection = useMemo(
+  const instructorsCollection = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'instructors'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
   const { data: instructors, loading: instructorsLoading } = useCollection<Instructor>(instructorsCollection);
   const instructor = instructors?.[0];
 
-  const lessonsQuery = useMemo(
+  const lessonsQuery = useMemoFirebase(
     () => (firestore && instructor ? query(collection(firestore, 'lessons'), where('instructorId', '==', instructor.id)) : null),
     [firestore, instructor]
   );
