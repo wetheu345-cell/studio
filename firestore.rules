@@ -25,11 +25,13 @@ service cloud.firestore {
     }
     
     function isInstructor() {
-        return isSignedIn() && (getRole(request.auth.uid) == 'Instructor' || isManager());
+      let userRole = getRole(request.auth.uid);
+      return isSignedIn() && (userRole == 'Instructor' || isManager());
     }
 
     function isRider() {
-        return isSignedIn() && (getRole(request.auth.uid) == 'Rider' || isInstructor());
+      let userRole = getRole(request.auth.uid);
+      return isSignedIn() && (userRole == 'Rider' || isInstructor());
     }
 
     // COLLECTION RULES
