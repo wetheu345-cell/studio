@@ -1,6 +1,6 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-import { firebase } from 'genkitx-firebase';
+import { firebase } from '@genkit-ai/firebase';
 import * as admin from 'firebase-admin';
 
 admin.initializeApp();
