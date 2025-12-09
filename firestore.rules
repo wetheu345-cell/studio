@@ -16,7 +16,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return getRole(request.auth.uid) == 'Admin';
+      let userRole = getRole(request.auth.uid);
+      return userRole == 'Admin';
     }
 
     function isManager() {
@@ -39,8 +40,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isManager();
       allow list: if isManager();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin(); // Only admin can change roles
-      allow update(role): if isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
     }
     
     // Customers: Users can only access their own customer document.
